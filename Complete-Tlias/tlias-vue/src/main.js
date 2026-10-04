@@ -5,7 +5,7 @@ import ElementPlus from 'element-plus' // 导入elementplus组件
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 导入图标
 import App from './App.vue'
-import router from './router' // 导入路由
+import router from './router' // 导入路由（导入js文件可以省略index.js它能自动查找补全，导入.vue就不行）
 
 const app = createApp(App)
 app.use(ElementPlus) // 使用ElementPlus组件

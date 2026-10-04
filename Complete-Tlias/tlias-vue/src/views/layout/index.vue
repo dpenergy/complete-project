@@ -1,8 +1,10 @@
 <script setup>
 import avatarUrl from '@/assets/img/avatar.jpg'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const username = ref('wudd');
+const route = useRoute();// 获取当前路由信息
 </script>
 
 <template>
@@ -33,13 +35,14 @@ const username = ref('wudd');
                 <el-aside class="aside">
                     <!-- 左侧菜单栏 -->
                     <!-- el-menu中添加router属性（默认为true）后子标签的index就是跳转的相对路径 -->
-                    <el-menu class="aside-menu" router="true">
-                            <el-menu-item index="index">
-                                <el-icon>
-                                    <Promotion />
-                                </el-icon>
-                                <span>Home</span>
-                            </el-menu-item>
+                    <!-- default-active：页面加载时默认激活的index -->
+                    <el-menu class="aside-menu" router="true" :default-active="route.name">
+                        <el-menu-item index="home">
+                            <el-icon>
+                                <Promotion />
+                            </el-icon>
+                            <span>Home</span>
+                        </el-menu-item>
                         <!-- 如果el-sum-menu标签没有index属性，那么所有的el-sub-menu就会共享同一个展开和收起开关 -->
                         <el-sub-menu index="part-twuo">
                             <!-- 这个部分有一个插槽，插槽的名字刚好就是#title -->
@@ -117,11 +120,18 @@ const username = ref('wudd');
 
 
 .header {
-    background-color: #3e6b27;
+    background-color: #4e8e2f;
     display: flex;
     align-items: center;
     flex-shrink: 0;
     /* 防止被压缩 */
+}
+
+.setting-btn {
+    background-color: #4e8e2f;
+    color: #b7b0a7;
+    border: none;
+    box-shadow: none;
 }
 
 /* 内嵌 el-container：左右布局，撑满剩余高度 */
@@ -211,12 +221,7 @@ const username = ref('wudd');
     color: #acbda4;
 }
 
-.setting-btn {
-    background-color: #3e6b27;
-    color: #b7b0a7;
-    border: none;
-    box-shadow: none;
-}
+
 
 .ph-flex-center {
     /* flex流式布局，默认为row方向布局，即为flex的轴方向 */

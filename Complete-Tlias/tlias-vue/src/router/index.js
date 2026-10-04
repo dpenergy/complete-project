@@ -2,10 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // @/表示...src/
 // 引入页面组件
+// vite构建工具导入时，如果指定路径到文件夹，那么它会自动找该文件夹下面的index.js文件但是.vue没有配置的话就不行，当前是没有配置过的，所以不行
 import ClazzView from '@/views/clazz/index.vue'
 import DeptView from '@/views/dept/index.vue'
 import EmpView from '@/views/emp/index.vue'
-import IndexView from '@/views/index/index.vue'
+import HomeView from '@/views/index/index.vue'
 import LogView from '@/views/log/index.vue'
 import LoginView from '@/views/login/index.vue'
 import StuView from '@/views/stu/index.vue'
@@ -27,13 +28,13 @@ const routes = [
     path: '/',
     name: 'homePage',
     component: LayoutView,
-    redirect: '/index', // 当前端访问路径是/结束，那么匹配到/就完成router匹配了，那就重定向到首页
+    redirect: '/home', // 当前端访问路径是/结束，那么匹配到/就完成router匹配了，那就重定向到首页
     children: [
       {
-        // 父路径有了‘/’那么子路径就可以不加/了（但是好像加了也不会错）
-        path: 'index',
+        // 父路径有了‘/’那么子路径就可以不加/了（加了/表示绝对路径忽视父路径的相对性）
+        path: 'home',
         name: 'home',
-        component: IndexView
+        component: HomeView
       },
       {
         path: 'dept',

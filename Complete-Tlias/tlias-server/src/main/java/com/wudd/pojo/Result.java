@@ -23,4 +23,8 @@ public class Result {
     public static Result error() {
         return new Result(0, "error", null);
     }
+    public static Result error(String msg) {
+        return new Result(0, msg, null);
+    }
+
 }
