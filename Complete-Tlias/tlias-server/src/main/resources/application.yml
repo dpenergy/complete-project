@@ -1,0 +1,22 @@
+spring:
+  # 配置模块名称
+  application:
+    name: tlias-sever
+  # 使用到了数据，所以配置数据库的连接
+  datasource:
+    url: jdbc:mysql://localhost:3306/tlias
+    username: root
+    password: mysql088wway
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+# 用到了Mybatis框架，所以配置映射和日志
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 配置日志文件输出的相对路径，由于我们是单模块的，所以就直接来一个log文件夹就够了
+logging:
+  file:
+    path: ./log

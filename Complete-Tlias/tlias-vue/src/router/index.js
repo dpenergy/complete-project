@@ -30,42 +30,43 @@ const routes = [
     redirect: '/index', // 当前端访问路径是/结束，那么匹配到/就完成router匹配了，那就重定向到首页
     children: [
       {
-        path: '/index',
+        // 父路径有了‘/’那么子路径就可以不加/了（但是好像加了也不会错）
+        path: 'index',
         name: 'home',
         component: IndexView
       },
       {
-        path: '/dept',
+        path: 'dept',
         name: 'dept',
-        component: ClazzView
-      },
-      {
-        path: '/clazz',
-        name: 'clazz',
         component: DeptView
       },
       {
-        path: '/emp',
+        path: 'clazz',
+        name: 'clazz',
+        component: ClazzView
+      },
+      {
+        path: 'emp',
         name: 'emp',
         component: EmpView
       },
       {
-        path: '/log',
+        path: 'log',
         name: 'log',
         component: LogView
       },
       {
-        path: '/stu',
+        path: 'stu',
         name: 'stu',
         component: StuView
       },
       {
-        path: '/stu-report',
+        path: 'stu-report',
         name: 'stu-report',
         component: StuReportView
       },
       {
-        path: '/emp-report',
+        path: 'emp-report',
         name: 'emp-report',
         component: EmpReportView
       }
