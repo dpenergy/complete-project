@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
-import { queryDeptListApi, addDeptApi } from '@/api/dept'
+import { queryDeptListApi, queryByIdApi, editDeptApi, addDeptApi } from '@/api/dept'
 import { ElMessage } from 'element-plus'
 
 // === 响应式变量 ===
@@ -11,7 +11,7 @@ const showDialog = ref(false)
 
 const dialogName = ref('')
 
-const dept = ref({ name: '' })
+const dept = ref({ name: '' , id:''})
 
 // 表单校验的两条规则：如果没有填写提示……，如果填写不规范提示……
 const rules = ref({
@@ -68,20 +68,59 @@ const save = async () => {
         return // 校验没通过或者对象根本不存在(判断对象是否存在需要.value，应为响应式这个模式的实现是需要内容的所以响应式对象本身一定是非null,但是value属性是有则有)，直接结束，不向后端发请求
     }
 
-    const result = await addDeptApi(dept.value)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要
+    // 如果没有id属性，就是添加部门
+    if(!dept.value.id) {
+        const result = await addDeptApi(dept.value.name)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要
 
-    // 判断是否成功
-    if (result.code) {
-        ElMessage.success(dept.value.name + ' add success!')
-        showDialog.value = false
-        // resetFields：把 dept.name 恢复成初始值(空字符串)，同时清掉校验状态，替代之前的手动置空
-        formRef.value.resetFields()
-        // 重新查询一遍部门列表
-        query()
-    } else {
-        // 提示具体信息msg
-        ElMessage.error(result.msg);
+        // 判断是否成功
+        if (result.code) {
+            ElMessage.success(dept.value.name + ' add success!')
+            showDialog.value = false
+        } else {
+            // 提示具体信息msg
+            ElMessage.error(result.msg)
+        }
+    } else { // 具备id属性就是修改部门
+        const result = await editDeptApi(dept.value) // dept包含id和name属性
+
+        if(result.code) {
+            ElMessage.success(result.msg)
+             showDialog.value = false
+        } else {
+            ElMessage.error(result.msg)
+        }
     }
+
+    // 手动置空，并清除校验信息
+    dept.value.name = ''
+    dept.value.id = ''
+    formRef.value?.clearValidate()  
+
+    query() // 重写查询表格内容
+}
+
+const cancel = () => {
+    showDialog.value = false // 关闭对话框
+    dept.value.name = '' // 重置dept对象
+    dept.value.id = ''
+    formRef.value?.clearValidate() // 清空表单校验提示信息
+}
+
+const editDept = async (id) => {
+    // 首先根据id查询部门,回显部门名称，记录id
+    // console.log(id);
+    
+    const res = await queryByIdApi(id)
+
+    if(res.code) { //成功查询到部门就显示对话框
+        dept.value.name = res.data.name;
+        dialogName.value = 'Edit dept'
+        showDialog.value = true; 
+    } else { // 没有查询到部门，说明前后端出现数据误差
+        ElMessage.error(res.msg)
+    }
+
+    // 编辑后点击Confirm,就跳转到save函数里面，在save函数里面会判断，新增部门操作还是修改部门操作
 }
 
 // 钩子函数-onMounted也需要导入
@@ -93,20 +132,26 @@ onMounted(() => {
 
 <template>
     <!-- {{deptList}} -->
-    <!-- {{dept.name}} -->
+    {{dept}}
     <h1>部门管理</h1>
     <!-- 按钮 -->
     <div class="top-button"><el-button type="primary" @click="addDept"> + 新增部门</el-button></div>
     <!-- 表格 -->
     <div class="dept-table">
-        <el-table :data="deptList" style="width: 100%">
+        <!-- 添加height属性就可以固定表头 -->
+        <el-table :data="deptList" style="width: 100%" height="735">
             <el-table-column type="index" label="ID" width="150" align="center" />
             <el-table-column prop="name" label="DeptName" width="250" align="center" />
             <el-table-column prop="createTime" label="CreateTime" width="300" align="center" :formatter="formatTime" />
             <el-table-column prop="updateTime" label="UpdateTime" width="300" align="center" :formatter="formatTime" />
             <el-table-column label="Operation" align="center">
-                <template #default>
-                    <el-button type="primary" size="small"><el-icon>
+                <!-- 1. 渲染该行时，会把改行的信息传递给scope这个临时变量，可以使用scope来获取当前行的内容 -->
+                <!-- 2. #是v-solt:的缩写，这是插槽语法 -->
+                <!-- 3. v-solt主要是为了template标签设计的，虽然其它标签也可以用，但是几乎不用 -->
+                <!-- 4. 给子组件的默认插槽填充内容，并把子组件暴露的数据返回并封装到scope临时变量里面 -->
+                <template #default="scope">
+                    <!-- {{ scope.row.id }} -->
+                    <el-button type="primary" size="small" @click="dept.id=scope.row.id;editDept(dept.id)"><el-icon>
                             <EditPen />
                         </el-icon>编辑</el-button>
                     <el-button type="danger" size="small"><el-icon>
@@ -136,11 +181,8 @@ onMounted(() => {
             </el-form>
             <template #footer>
                 <div class="dialog-btn">
-                    <!-- resetFields：恢复初始值并清掉红色提示，比手动 dept.name='' 更彻底 -->
-                    <el-button @click="showDialog = false; formRef?.resetFields()">Cancel</el-button>
-                    <el-button type="success" @click="save">
-                        Confirm
-                    </el-button>
+                    <el-button @click="cancel">Cancel</el-button>
+                    <el-button type="success" @click="save">Confirm</el-button>
                 </div>
             </template>
         </el-dialog>

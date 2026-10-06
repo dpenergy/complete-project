@@ -9,4 +9,8 @@ public interface DeptServer {
     List<Dept> getDeptList();
 
     Result addDept(Dept dept);
+
+    Dept queryDeptById(Integer id);
+
+    Result updateDept(Dept dept);
 }

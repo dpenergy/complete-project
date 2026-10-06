@@ -4,6 +4,7 @@ import com.wudd.pojo.Dept;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -21,4 +22,10 @@ public interface DeptMapper {
     // 这里不是直接访问属性，底层是使用getter来调取属性
     @Insert("insert into dept(name,create_time,update_time) values(#{name},#{createTime},#{updateTime})")
     void addDept(Dept dept);
+
+    @Select("select * from dept where id = #{id}")
+    Dept queryDEptById(Integer id);
+
+    @Update("update dept set name=#{name}, update_time=#{updateTime} where id=#{id}")
+    void updateDept(Dept newDept);
 }

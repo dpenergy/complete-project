@@ -33,4 +33,26 @@ public class DeptServerImpl implements DeptServer {
 
         return Result.error("Duplicate dept name!");
     }
+
+    @Override
+    public Dept queryDeptById(Integer id) {
+        return deptMapper.queryDEptById(id);
+    }
+
+    @Override
+    public Result updateDept(Dept dept) {// dept携带id和name属性
+        // 根据id查询到原始dept
+        Dept newDept = deptMapper.queryDEptById(dept.getId());
+
+        // dept中只有name和id属性，补充updateTime
+        newDept.setUpdateTime(LocalDateTime.now());
+
+        // 更新name属性
+        newDept.setName(dept.getName());
+
+        // 提交newDept
+        deptMapper.updateDept(newDept);
+
+        return Result.success();
+    }
 }
