@@ -15,7 +15,7 @@ const addDeptApi = (dept) => request.post('/depts',dept) // 第二个参数就�
 const editDeptApi = (dept) => request.put('/depts',dept)
 
 // 删除部门
+const deleteDeptApi = (id) => request.delete(`/depts/${id}`)
 
 
-
-export {queryDeptListApi,queryByIdApi,editDeptApi,addDeptApi}
+export {queryDeptListApi,queryByIdApi,editDeptApi,addDeptApi,deleteDeptApi}

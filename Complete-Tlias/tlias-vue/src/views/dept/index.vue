@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
-import { queryDeptListApi, queryByIdApi, editDeptApi, addDeptApi } from '@/api/dept'
+import { queryDeptListApi, editDeptApi, addDeptApi, deleteDeptApi } from '@/api/dept'
 import { ElMessage } from 'element-plus'
 
 // === 响应式变量 ===
@@ -11,7 +11,7 @@ const showDialog = ref(false)
 
 const dialogName = ref('')
 
-const dept = ref({ name: '' , id:''})
+const dept = ref({ name: '', id: '' })
 
 // 表单校验的两条规则：如果没有填写提示……，如果填写不规范提示……
 const rules = ref({
@@ -27,6 +27,10 @@ const rules = ref({
 // 拿到实例才能调用 el-form 暴露的 validate（主动校验）、resetFields（重置）、clearValidate（清提示）等方法
 const formRef = ref(null)
 
+// 设置一组operation,用于区分save中执行的具体逻辑
+const isAddDept = ref(false)
+const isEditDept = ref(false)
+const isDelteDept = ref(false)
 
 
 // === 函数 ===
@@ -50,6 +54,8 @@ const query = async () => {
 
 // 不要忘记操作响应式数据先要拿到value对象在赋值，而不是直接赋值
 const addDept = () => {
+    isAddDept.value = true
+
     dialogName.value = 'Add Dept'
     showDialog.value = true
     // nextTick：等对话框(表单)渲染完再清掉上一次残留的校验提示，比如用户点右上角×关闭的情况
@@ -69,8 +75,8 @@ const save = async () => {
     }
 
     // 如果没有id属性，就是添加部门
-    if(!dept.value.id) {
-        const result = await addDeptApi(dept.value.name)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要
+    if (isAddDept.value) {
+        const result = await addDeptApi(dept.value)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要，注意要传递的是一个JSON对象，不能传递一个值过去哈
 
         // 判断是否成功
         if (result.code) {
@@ -80,21 +86,40 @@ const save = async () => {
             // 提示具体信息msg
             ElMessage.error(result.msg)
         }
-    } else { // 具备id属性就是修改部门
-        const result = await editDeptApi(dept.value) // dept包含id和name属性
 
-        if(result.code) {
+        isAddDept.value = false
+    }
+
+    if (isEditDept.value) { // 具备id属性就是修改部门
+        const result = await editDeptApi(dept.value) // dept包含id和name属性的json对象
+
+        if (result.code) {
             ElMessage.success(result.msg)
-             showDialog.value = false
+            showDialog.value = false
         } else {
             ElMessage.error(result.msg)
         }
+
+        isEditDept.value = false
+    }
+
+    if (isDelteDept.value) {
+        const res = await deleteDeptApi(dept.value.id)
+
+        if (res.code) {
+            ElMessage.success(res.msg)
+            showDialog.value = false
+        } else {
+            ElMessage.error(res.msg)
+        }
+
+        isDelteDept.value = false
     }
 
     // 手动置空，并清除校验信息
     dept.value.name = ''
     dept.value.id = ''
-    formRef.value?.clearValidate()  
+    formRef.value?.clearValidate()
 
     query() // 重写查询表格内容
 }
@@ -104,23 +129,23 @@ const cancel = () => {
     dept.value.name = '' // 重置dept对象
     dept.value.id = ''
     formRef.value?.clearValidate() // 清空表单校验提示信息
+    isEditDept.value = false // 重置操作
+    isAddDept.value = false
+    isDelteDept.value = false
 }
 
-const editDept = async (id) => {
-    // 首先根据id查询部门,回显部门名称，记录id
-    // console.log(id);
-    
-    const res = await queryByIdApi(id)
+const editDept = async () => {
+    isEditDept.value = true
 
-    if(res.code) { //成功查询到部门就显示对话框
-        dept.value.name = res.data.name;
-        dialogName.value = 'Edit dept'
-        showDialog.value = true; 
-    } else { // 没有查询到部门，说明前后端出现数据误差
-        ElMessage.error(res.msg)
-    }
+    dialogName.value = 'Edit dept'
+    showDialog.value = true;
+}
 
-    // 编辑后点击Confirm,就跳转到save函数里面，在save函数里面会判断，新增部门操作还是修改部门操作
+const deleteDept = () => {
+    isDelteDept.value = true
+
+    dialogName.value = 'Are you sure to delete ' + dept.value.name + ' ?'
+    showDialog.value = true
 }
 
 // 钩子函数-onMounted也需要导入
@@ -132,7 +157,7 @@ onMounted(() => {
 
 <template>
     <!-- {{deptList}} -->
-    {{dept}}
+    {{ dept }}
     <h1>部门管理</h1>
     <!-- 按钮 -->
     <div class="top-button"><el-button type="primary" @click="addDept"> + 新增部门</el-button></div>
@@ -151,10 +176,11 @@ onMounted(() => {
                 <!-- 4. 给子组件的默认插槽填充内容，并把子组件暴露的数据返回并封装到scope临时变量里面 -->
                 <template #default="scope">
                     <!-- {{ scope.row.id }} -->
-                    <el-button type="primary" size="small" @click="dept.id=scope.row.id;editDept(dept.id)"><el-icon>
+                    <el-button type="primary" size="small" @click="dept.id=scope.row.id; dept.name=scope.row.name; editDept(dept.id)"><el-icon>
                             <EditPen />
                         </el-icon>编辑</el-button>
-                    <el-button type="danger" size="small"><el-icon>
+                    <el-button type="danger" size="small"
+                        @click="dept.name = scope.row.name; dept.id = scope.row.id; deleteDept()"><el-icon>
                             <Delete />
                         </el-icon>删除</el-button>
                 </template>
@@ -166,7 +192,9 @@ onMounted(() => {
     <div class="dialog">
         <!-- v-model是用于表单的双向数据绑定，v-bind使用与绑定标签属性 -->
         <!-- v-model是双向，v-bind是单向 -->
-        <el-dialog v-model="showDialog" :title="dialogName" width="500">
+        <!-- before-close：点击遮罩层空白处、按ESC、点右上角×时触发的关闭前钩子，把它指向cancel，他是v-bind不是v-on哦 -->
+        <!-- 这样这三种关闭方式也会走cancel里面的清理逻辑（cancel内部用showDialog.value=false关闭，所以不需要传done参数） -->
+        <el-dialog v-model="showDialog" :title="dialogName" width="500" :before-close="cancel">
             <!-- 表单 -->
             <!-- @submit.prevent防止默认提交行为按下enter后自动提交，我们是按下enter调用save提交所以需要防止默认提交 -->
             <!-- 当这个 <el-form> 组件渲染完成后，把它的组件实例赋值给 script 中名为 formRef 的变量 -->

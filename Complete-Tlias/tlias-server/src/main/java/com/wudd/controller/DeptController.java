@@ -18,34 +18,38 @@ public class DeptController {
     @Autowired
     private DeptServer deptServer;
 
-    // 获取所有部门信息
     @GetMapping
     public Result getDeptList() {
-        log.info("接收到部门列表查询");
+        log.info("部门列表查询请求"); // 具体的日志信息在SpringAOP中实现
         List<Dept> deptList = deptServer.getDeptList();
-        log.info("获取到部门信息：{}",deptList);
         return Result.success(deptList);
     }
 
     //通过id查询部门，实现查询回显效果
     @GetMapping("/{id}")
     public Result queryDeptById(@PathVariable Integer id) {
+        log.info("id查询部门请求");
         Dept dept = deptServer.queryDeptById(id);
         return Result.success(dept);
     }
 
-    // 添加新部门
     @PostMapping
-    public Result addDept(@RequestBody Dept dept) {
-        log.info("接收到添加部门请求：{}",dept);
-        Result result= deptServer.addDept(dept);
-        log.info("响应添加部门请求：{}",result);
-        return result;  // 只响应数据部处理任何逻辑
+    public Result addDept(@RequestBody Dept dept) { // 只传递name属性
+        log.info("添加部门请求"); // 具体执行信息在SpringAOP中实现
+        return deptServer.addDept(dept);
     }
 
-    // 修改部门名称(前端只传递id和name属性)
     @PutMapping
-    public Result updateDept(@RequestBody Dept dept) {
-        return deptServer.updateDept(dept);
+    public Result updateDept(@RequestBody Dept dept) {// 只传递id和name属性
+        log.info("修改部门请求");
+        deptServer.updateDept(dept);
+        return Result.successWithMsg("Modification successful!");
+    }
+
+    @DeleteMapping("/{id}")
+    public Result deleteDept(@PathVariable Integer id) {
+        log.info("删除部门请求");
+        deptServer.delteDeptById(id);
+        return Result.successWithMsg("Delete successful!");
     }
 }

@@ -12,5 +12,7 @@ public interface DeptServer {
 
     Dept queryDeptById(Integer id);
 
-    Result updateDept(Dept dept);
+    void updateDept(Dept dept);
+
+    void delteDeptById(Integer id);
 }

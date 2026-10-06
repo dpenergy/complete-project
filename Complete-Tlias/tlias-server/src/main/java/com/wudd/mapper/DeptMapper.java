@@ -1,10 +1,7 @@
 package com.wudd.mapper;
 
 import com.wudd.pojo.Dept;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -28,4 +25,7 @@ public interface DeptMapper {
 
     @Update("update dept set name=#{name}, update_time=#{updateTime} where id=#{id}")
     void updateDept(Dept newDept);
+
+    @Delete("delete from dept where id = #{id}")
+    void deleteDeptById(Integer id);
 }

@@ -28,10 +28,10 @@ public class DeptServerImpl implements DeptServer {
         // 先查找是否已经存在
         if(deptMapper.queryDeptByName(dept.getName()) == null) {
             deptMapper.addDept(dept);
-            return Result.success();
+            return Result.successWithMsg(dept.getName()+" add successfully!");
         }
 
-        return Result.error("Duplicate dept name!");
+        return Result.error(dept.getName()+" already exist! Please do not repeatedly add it!");
     }
 
     @Override
@@ -40,19 +40,20 @@ public class DeptServerImpl implements DeptServer {
     }
 
     @Override
-    public Result updateDept(Dept dept) {// dept携带id和name属性
+    public void updateDept(Dept newDept) {// dept携带id和name属性
         // 根据id查询到原始dept
-        Dept newDept = deptMapper.queryDEptById(dept.getId());
+        Dept originalDept = deptMapper.queryDEptById(newDept.getId());
 
-        // dept中只有name和id属性，补充updateTime
+        // 补充updateTime,和createTime
         newDept.setUpdateTime(LocalDateTime.now());
-
-        // 更新name属性
-        newDept.setName(dept.getName());
+        originalDept.setCreateTime(originalDept.getCreateTime());
 
         // 提交newDept
         deptMapper.updateDept(newDept);
+    }
 
-        return Result.success();
+    @Override
+    public void delteDeptById(Integer id) {
+        deptMapper.deleteDeptById(id);
     }
 }
