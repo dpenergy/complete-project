@@ -150,6 +150,7 @@ const route = useRoute();// 获取当前路由信息
 /* ---- aside 侧边栏 el-menu 样式 ---- */
 .aside-menu {
     background-color: #545c64;
+    /* background-color: #4c5255; */
     /* 去掉 el-menu 默认右边框 */
     border-right: none;
 }
@@ -159,6 +160,7 @@ const route = useRoute();// 获取当前路由信息
 /* :deep() 的作用，穿透scope样式的边界，修改组件内部元素的样式 */
 .aside-menu :deep(.el-sub-menu__title) {
     background-color: #545c64;
+    /* background-color: #4c5255; */
     color: #f5f6f6;
 }
 
@@ -172,6 +174,7 @@ const route = useRoute();// 获取当前路由信息
 /* el-menu-item 背景色 & 字体色 */
 .aside-menu :deep(.el-menu-item) {
     background-color: #545c64;
+    /* background-color: #4c5255; */
     color: #f5f6f6;
 }
 
@@ -184,6 +187,7 @@ const route = useRoute();// 获取当前路由信息
 /* 展开的 sub-menu 弹出层背景色 */
 .aside-menu :deep(.el-sub-menu .el-menu) {
     background-color: #545c64;
+    /* background-color: #4c5255; */
 }
 
 /* ---- 点击激活（选中）状态 ---- */
@@ -203,7 +207,8 @@ const route = useRoute();// 获取当前路由信息
 
 /* main 主内容区 */
 .main {
-    background-color: #363637;
+    /* background-color: #363637; */
+    background-color: #373b3e;
     height: 100%;
 }
 

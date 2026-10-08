@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wudd.mapper.EmpMapper">
+    <!-- 自定义SQL查询结果封装 -->
+    <resultMap id="EmpWithExprMap" type="com.wudd.pojo.Emp">
+        <!-- 员工自身的字段，property表示Emp类中属性，column表示SQL查询结果 -->
+        <id property="id" column="emp_id" />
+        <result property="name" column="emp_name"/>
+        <result property="username" column="username"/>
+        <result property="gender" column="gender"/>
+        <result property="avatar" column="avatar"/>
+        <result property="dept" column="dept_name"/>
+        <result property="job" column="emp_job"/>
+        <result property="entryDate" column="entry_date"/>
+        <result property="updateTime" column="update_time"/>
+
+        <!-- 将扁平化的分行，结合嵌套在一起 -->
+        <collection property="exprList" ofType="com.wudd.pojo.Expr">
+            <id property="id" column="expr_id"/>
+            <result property="company" column="company"/>
+            <result property="job" column="expr_job"/>
+            <result property="begin" column="begin"/>
+            <result property="end" column="end"/>
+        </collection>
+    </resultMap>
+
+
+    <!-- resultType基础类型可以直接写 -->
+    <select id="queryEmpCount" resultType="int">
+        select count(*) from emp e
+            left join dept d on e.dept_id=d.id
+            left join job j on e.job_id=j.id
+            <where>
+                <if test="name != null and name !=''">
+                    e.name like concat('%',#{name},'%')
+                </if>
+                <if test="gender != null">
+                    and e.gender = #{gender}
+                </if>
+                <if test="job != null and job != ''">
+                    and j.name like concat('%',#{job},'%')
+                </if>
+                <if test="begin != null and end != null">
+                    and e.entry_date between #{begin} and #{end}
+                </if>
+            </where>
+    </select>
+
+    <select id="queryEmpList" resultMap="EmpWithExprMap">
+        select e.id, e.name as emp_name, e.username, e.gender, e.avatar, e.entry_date, e.update_time,
+               d.name as dept_name,
+               j.name as emp_job,
+               ex.company, ex.job as expr_job, ex.begin, ex.end
+        from emp e
+        left join dept d on e.dept_id=d.id
+        left join job j on e.job_id=j.id
+        left join expr ex on e.id=ex.emp_id
+        <where>
+            <if test="name != null and name !=''">
+                e.name like concat('%',#{name},'%')
+            </if>
+            <if test="gender != null">
+                and e.gender = #{gender}
+            </if>
+            <if test="job != null and job != ''">
+                and j.name like concat('%',#{job},'%')
+            </if>
+            <if test="begin != null and end != null">
+                and e.entry_date between #{begin} and #{end}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -74,9 +74,11 @@ const save = async () => {
         return // 校验没通过或者对象根本不存在(判断对象是否存在需要.value，应为响应式这个模式的实现是需要内容的所以响应式对象本身一定是非null,但是value属性是有则有)，直接结束，不向后端发请求
     }
 
+    let result; // const常量是不可以重新赋值的，所以采用具有块作用域的let变量
+
     // 如果没有id属性，就是添加部门
     if (isAddDept.value) {
-        const result = await addDeptApi(dept.value)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要，注意要传递的是一个JSON对象，不能传递一个值过去哈
+        result = await addDeptApi(dept.value)  // 对象外又封装了一层为响应式对象，html里面能自动解包多以不用.value但是script里面需要，注意要传递的是一个JSON对象，不能传递一个值过去哈
 
         // 判断是否成功
         if (result.code) {
@@ -91,7 +93,7 @@ const save = async () => {
     }
 
     if (isEditDept.value) { // 具备id属性就是修改部门
-        const result = await editDeptApi(dept.value) // dept包含id和name属性的json对象
+        result = await editDeptApi(dept.value) // dept包含id和name属性的json对象
 
         if (result.code) {
             ElMessage.success(result.msg)
@@ -104,13 +106,13 @@ const save = async () => {
     }
 
     if (isDelteDept.value) {
-        const res = await deleteDeptApi(dept.value.id)
+        result = await deleteDeptApi(dept.value.id)
 
-        if (res.code) {
-            ElMessage.success(res.msg)
+        if (result.code) {
+            ElMessage.success(result.msg)
             showDialog.value = false
         } else {
-            ElMessage.error(res.msg)
+            ElMessage.error(result.msg)
         }
 
         isDelteDept.value = false
@@ -157,7 +159,7 @@ onMounted(() => {
 
 <template>
     <!-- {{deptList}} -->
-    {{ dept }}
+    <!-- {{ dept }} -->
     <h1>部门管理</h1>
     <!-- 按钮 -->
     <div class="top-button"><el-button type="primary" @click="addDept"> + 新增部门</el-button></div>
