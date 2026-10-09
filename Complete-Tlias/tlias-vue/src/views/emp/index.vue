@@ -1,31 +1,27 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { queryEmpApi } from "@/api/emp";
+import { queryDeptListApi } from '@/api/dept';
+import { queryJobListApi } from '@/api/job';
 import {ElMessage} from 'element-plus'
 
-// -------------- 响应式数据 -------------
-const searchInfo = ref({ name: '', gender: '', job:'', date: '', begin: '', end: '' }) // 搜索表单项数据
 
-const empList = ref([]) // 表格数据
-
-const currentPage = ref(1)  // 分页条内的响应式数据
-const pageSize = ref(5)
-const total = ref(0)
-
-
-// -------------- 函数 ---------------
+// ------------ 搜索表单 ------------ 
+const searchInfo = ref({ name: '', gender: '', job:'', date: '', begin: '', end: '' }) // 搜索表单项
 // 侦听searchInfo中的date属性
 watch(() => searchInfo.value.date, (newVal, oldVal) => {
     // 可选链表达式，处理null和undefined
-    searchInfo.value.begin = newVal?.[0]
-    searchInfo.value.end = newVal?.[1]
+    if(Array.isArray(newVal)) {
+        searchInfo.value.begin = newVal[0]
+        searchInfo.value.end = newVal[1]
+    } else {
+        searchInfo.value.begin = ''
+        searchInfo.value.end = ''
+    }
 })
 
-// 钩子函数
-onMounted(() => search() )
-
-
-// 查询
+// ------------ 员工列表查询 ------------ 
+const empList = ref([]) // 表格
 const search = async () => { 
     const res = await queryEmpApi(searchInfo.value.name, searchInfo.value.gender, searchInfo.value.job, searchInfo.value.begin,searchInfo.value.end)
 
@@ -42,7 +38,65 @@ const search = async () => {
     }
 }
 
-// 增删员工
+
+
+// ------------ 对话框显示和按钮 ------------ 
+const dialogFormVisible = ref(false) // 对话框
+
+const cancel = () => {
+    dialogFormVisible.value = false
+    emp.value = {name:'',username:'',gender:'',avatar:'',dept:'',job:'',entryDate:'',exprList:[]}
+    jobList.value = []
+    deptList.value = []
+}
+const confirm = () => {
+    dialogFormVisible.value = false
+
+}
+
+// ------------ 新增员工 ------------ 
+// emp最终是传递给服务器，然后服务器更具emp添加员工到数据库
+const emp = ref({name:'',username:'',gender:'',avatar:'',dept:'',job:'',entryDate:'',exprList:[]})
+const handleDateChange = (expr,val) => {
+    if(Array.isArray(val)) {
+        expr.begin = val[0]
+        expr.end = val[1]
+    } else {
+        expr.begin = ''
+        expr.end = ''
+    }
+}
+
+const jobList = ref([])
+const deptList = ref([])
+const addEmp = async () => {
+    dialogFormVisible.value = true
+    
+    const res = await queryDeptListApi() // 获取部门信息
+    if(res.code) {
+        deptList.value = res.data
+    } else {
+        ElMessage.error(res.msg)
+    }
+
+    const jobRes = await queryJobListApi() // 获取职位信息
+    if(jobRes.code) {
+        jobList.value = jobRes.data
+    } else {
+        ElMessage.error(jobRes.msg)
+    }
+}
+
+// 员工经历
+// emp_id属性是emp传递到后端到数据库中查询回显才能获取到的内容
+const createExpr = () => ({company:'',job:'',date:'',begin:'',end:''})
+const addExpr = () => {emp.value.exprList.push(createExpr())}
+const deleteExpr = (index) => {emp.value.exprList.splice(index,1)} // index:起始索引，1表示删除元素的个数
+
+
+
+
+// ---------------- 删除员工 ---------------- 
 const deleteEmp = () => {
 
 }
@@ -51,7 +105,17 @@ const deleteEmps = () => { // 批量删除员工
 }
 
 
-// 分页条
+
+// ---------------- 编辑员工 ---------------- 
+const editEmp = () => {
+
+}
+
+
+// ---------------- 分页条 ---------------- 
+const currentPage = ref(1)  // 分页条
+const pageSize = ref(5)
+const total = ref(0)
 const handleCurrentChange = () => {
 
 }
@@ -59,11 +123,15 @@ const handleSizeChange = () => {
 
 }
 
+
+// ---------------- 格式化日期 ----------------
 const formatTime = (_row, _column, cellValue) => {
     // 这里可以确保cellValue是一个字符串所以可以直接使用replace这个内置的String原型链上的方法
     return cellValue ? cellValue.replace('T', ' ') : ''
 }
 
+// 钩子函数
+onMounted(() => search() )
 </script>
 
 <template>
@@ -87,11 +155,11 @@ const formatTime = (_row, _column, cellValue) => {
             </el-form-item>
             <!-- 升级为从数据库中查到种类，然后显示选择下拉列表 -->
             <el-form-item label="职位">
-                <el-input v-model="searchInfo.job" placeholder="输入职位" clearable />
+                <el-input v-model="searchInfo.job" placeholder="输入职位" clearable :value-on-clear="''"/>
             </el-form-item>
             <el-form-item label="入职日期">
                 <el-date-picker v-model="searchInfo.date" type="daterange" range-separator="To" start-placeholder="起始日期"
-                    end-placeholder="结束日期" value-format="YYYY-MM-DD" />
+                    end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''"/>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="search"><el-icon>
@@ -106,14 +174,14 @@ const formatTime = (_row, _column, cellValue) => {
         <el-button type="primary" @click="addEmp"><el-icon>
                 <CirclePlusFilled />
             </el-icon>新增员工</el-button>
-        <el-button type="danger" @click="delteEmp"><el-icon>
+        <el-button type="danger" @click="deleteEmps"><el-icon>
                 <RemoveFilled />
             </el-icon>批量删除</el-button>
     </div>
 
     <!-- 表格 -->
     <!-- {{ empList }} -->
-    {{ searchInfo }}
+    <!-- {{ searchInfo }} -->
     <div class="table">
         <el-table :data="empList" style="width: 100%">
             <el-table-column type="selection" :selectable="selectable" width="55" align="center" class="check-box"/>
@@ -140,10 +208,15 @@ const formatTime = (_row, _column, cellValue) => {
             </el-table-column>
             <el-table-column prop="entryDate" label="入职日期" width="170" align="center" />
             <el-table-column prop="updateTime" label="更新时间" width="170" align="center" :formatter="formatTime"/>
+            <el-table-column label="工作经历" min-width="60" align="center">
+                <template #default="scope">
+                    <el-button type="primary" size="small" @click="showExpr(scope.row.id)"><el-icon><More /></el-icon>详情</el-button>
+                </template>
+            </el-table-column>
             <el-table-column label="操作" min-width="120" align="center">
                 <template #default="scope">
-                    <el-button type="primary" size="small" @click=""><el-icon><EditPen /></el-icon>编辑</el-button>
-                    <el-button type="danger" size="small" @click=""><el-icon><Delete /></el-icon>删除</el-button>
+                    <el-button type="primary" size="small" @click="editEmp"><el-icon><EditPen /></el-icon>编辑</el-button>
+                    <el-button type="danger" size="small" @click="deleteEmp"><el-icon><Delete /></el-icon>删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -161,6 +234,71 @@ const formatTime = (_row, _column, cellValue) => {
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
         />
+    </div>
+
+    <!-- 对话框 -->
+    <div class="dialog">
+        {{ emp }}
+        <!-- {{ deptList }} -->
+        <!-- {{ jobList }} -->
+        <el-dialog v-model="dialogFormVisible" title="新增员工" width="500">
+            <el-form :model="emp">
+                <el-form-item label="姓名">
+                    <el-input v-model="emp.name" placeholder="请输入姓名" clearable/>
+                </el-form-item>
+                <el-form-item label="用户名">
+                    <el-input v-model="emp.username" placeholder="请输入用户名" clearable/>
+                </el-form-item>
+                <el-form-item label="性别">
+                    <el-select v-model="emp.gender" placeholder="请选择" clearable :value-on-clear="''">
+                        <el-option label="男" value="1" />
+                        <el-option label="女" value="2" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="头像地址">
+                    <el-input v-model="emp.avatar" clearable/>
+                </el-form-item>
+                <el-form-item label="部门">
+                    <el-select v-model="emp.dept" placeholder="请选择" clearable :value-on-clear="''">
+                        <!-- 循环获取部门选项 -->
+                        <el-option v-for="item in deptList" :key="item.id" :label="item.name" :value="item.id" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="职位">
+                    <el-select v-model="emp.job" placeholder="请选择" clearable :value-on-clear="''">
+                        <!-- 循环获取职位选项 -->
+                        <el-option v-for="item in jobList" :key="item.id" :label="item.name" :value="item.id" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="addExpr" style="margin-bottom: 10px;"><el-icon><CirclePlusFilled /></el-icon>添加工作经历</el-button>
+                    <!-- 嵌套一个动态的工作经历表单 -->
+                    <el-form :inline="true" v-for="(expr, index) in emp.exprList" :key="index" class="inner-form">
+                        <el-form-item label="公司">
+                            <el-input v-model="expr.company" placeholder="请输入公司名称" clearable />
+                        </el-form-item>
+                        <el-form-item label="职位">
+                            <el-input v-model="expr.job" placeholder="请输入职位" clearable />
+                        </el-form-item>
+                        <el-form-item label="入职日期">
+                            <el-date-picker v-model="expr.date" type="daterange" range-separator="To" start-placeholder="起始日期"
+                                end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''" @change="(val) => handleDateChange(expr,val)"/>
+                                <!-- @change是选项改变后触发 -->
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="danger" @click="deleteExpr(index)"><el-icon><Delete /></el-icon></el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="cancel">取消</el-button>
+                    <el-button type="primary" @click="confirm">确认</el-button>
+                </div>
+            </template>
+        </el-dialog>
     </div>
 
 </template>

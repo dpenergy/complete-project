@@ -18,7 +18,9 @@ public class Emp {
     private Integer gender;
     private String avatar;
     private String dept;
+    private String dept_id; // 这样从数据库拿去数据和传入数据都很方便，按需使用
     private String job;
+    private String job_id;
     private LocalDate entryDate;
     private LocalDateTime updateTime;
     private List<Expr> exprList;

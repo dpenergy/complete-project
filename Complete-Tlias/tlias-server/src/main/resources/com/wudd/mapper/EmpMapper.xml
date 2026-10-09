@@ -49,10 +49,10 @@
     </select>
 
     <select id="queryEmpList" resultMap="EmpWithExprMap">
-        select e.id, e.name as emp_name, e.username, e.gender, e.avatar, e.entry_date, e.update_time,
+        select e.id as emp_id, e.name as emp_name, username, gender, avatar, entry_date, e.update_time as update_time,
                d.name as dept_name,
                j.name as emp_job,
-               ex.company, ex.job as expr_job, ex.begin, ex.end
+               ex.id as expr_id,company, ex.job as expr_job, begin, end
         from emp e
         left join dept d on e.dept_id=d.id
         left join job j on e.job_id=j.id

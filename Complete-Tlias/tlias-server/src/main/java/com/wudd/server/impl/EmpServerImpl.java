@@ -19,7 +19,7 @@ public class EmpServerImpl implements EmpServer {
     @Override
     public Result queryEmpList(SearchInfo searchInfo) {
         int total = empMapper.queryEmpCount(searchInfo);
-        if(total == 0) return Result.successWithMsg("没有查询到相关数据");
+        if(total == 0) return Result.error("没有查询到相关数据");
 
         List<Emp> rows = empMapper.queryEmpList(searchInfo);
 
