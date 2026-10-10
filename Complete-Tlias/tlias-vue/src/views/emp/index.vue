@@ -1,17 +1,18 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { queryEmpApi, addEmpApi } from "@/api/emp";
+import { queryEmpApi, addEmpApi, batchDeleteEmpApi} from "@/api/emp";
 import { queryDeptListApi } from '@/api/dept';
 import { queryJobListApi } from '@/api/job';
-import {ElMessage} from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 
 // ------------ 搜索表单 ------------ 
-const searchInfo = ref({ name: '', gender: '', job:'', date: '', begin: '', end: '' }) // 搜索表单项
+// ------------ 员工列表查询 ------------ 
+const searchInfo = ref({ name: '', gender: '', job: '', date: '', begin: '', end: '' }) // 搜索表单项
 // 侦听searchInfo中的date属性
 watch(() => searchInfo.value.date, (newVal, oldVal) => {
     // 可选链表达式，处理null和undefined
-    if(Array.isArray(newVal)) {
+    if (Array.isArray(newVal)) {
         searchInfo.value.begin = newVal[0]
         searchInfo.value.end = newVal[1]
     } else {
@@ -20,15 +21,14 @@ watch(() => searchInfo.value.date, (newVal, oldVal) => {
     }
 })
 
-// ------------ 员工列表查询 ------------ 
 const empList = ref([]) // 表格
-const search = async () => { 
-    const res = await queryEmpApi(searchInfo.value.name, searchInfo.value.gender, searchInfo.value.job, searchInfo.value.begin,searchInfo.value.end)
+const search = async () => {
+    const res = await queryEmpApi(searchInfo.value.name, searchInfo.value.gender, searchInfo.value.job, searchInfo.value.begin, searchInfo.value.end)
 
     console.log(res);
-    
 
-    if(res.code) {
+
+    if (res.code) {
         empList.value = res.data.empList
         total.value = res.data.total
         console.log(empList.value);
@@ -38,6 +38,10 @@ const search = async () => {
     }
 }
 
+const clear = () => {
+    searchInfo.value = { name: '', gender: '', job: '', date: '', begin: '', end: '' }
+    search()
+}
 
 
 // ------------ 对话框显示和按钮 ------------ 
@@ -45,35 +49,40 @@ const dialogFormVisible = ref(false) // 对话框
 
 const cancel = () => {
     dialogFormVisible.value = false
-    emp.value = {name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]}
+    emp.value = { name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] }
     empFormRef.value?.clearValidate() // 重置后清除残留的校验提示
     jobList.value = []
     deptList.value = []
 }
 const confirm = async () => { // 将emp传递到服务器
+
     // 先对整个表单（包括动态的工作经历表单项）进行校验，校验不通过则不提交
+    // 如果校验通过validate就直接返回true不会执行catch，如果失败validate就直接抛出异常然后catch捕获返回false
     const valid = await empFormRef.value.validate().catch(() => false)
-    if (!valid) return
-
-    dialogFormVisible.value = false
-    const res = await addEmpApi(emp.value)
-
-    if(res.code) {
-        ElMessage.success(res.msg)
-    } else {
-        ElMessage.error(res.msg)
+    if (!valid) {
+        ElMessage.warning('请合法填写所有必填项！')
+        return
     }
 
-    emp.value = {name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]}
-    empFormRef.value.clearValidate() // 重置后清除残留的校验提示
+    const res = await addEmpApi(emp.value)
+
+    if (res.code) { // 如果添加成功，就可以直接关掉对话框了
+        dialogFormVisible.value = false
+        ElMessage.success(res.msg)
+        emp.value = { name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] }
+        empFormRef.value.clearValidate() // 重置后清除残留的校验提示
+        search()
+    } else { // 如果没有成功，就保留对话框内容，让用户修改
+        ElMessage.error(res.msg)
+    }
 }
 
 // ------------ 新增员工 ------------ 
 // emp向服务器传递员工对象所需要的数据，entryDate，updateTime可以不用传递
 // emp最终是传递给服务器，然后服务器更具emp添加员工到数据库
-const emp = ref({name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]})
-const handleDateChange = (expr,val) => {
-    if(Array.isArray(val)) {
+const emp = ref({ name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] })
+const handleDateChange = (expr, val) => {
+    if (Array.isArray(val)) {
         expr.begin = val[0]
         expr.end = val[1]
     } else {
@@ -86,16 +95,16 @@ const jobList = ref([])
 const deptList = ref([])
 const addEmp = async () => {
     dialogFormVisible.value = true
-    
+
     const res = await queryDeptListApi() // 获取部门信息
-    if(res.code) {
+    if (res.code) {
         deptList.value = res.data
     } else {
-        ElMessage.error(res.msg)
+        ElMessage.error(jobRes.msg)
     }
 
     const jobRes = await queryJobListApi() // 获取职位信息
-    if(jobRes.code) {
+    if (jobRes.code) {
         jobList.value = jobRes.data
     } else {
         ElMessage.error(jobRes.msg)
@@ -106,6 +115,7 @@ const addEmp = async () => {
 const empFormRef = ref() // 表单引用，用于触发表单校验
 
 // 姓名：必填，不能包含空格和符号（不限制字数，允许中文、英文、数字）
+// _rule,value,callback都是由element plus底层传递过来的，不用自己定义
 const validateName = (_rule, value, callback) => {
     if (!value) {
         callback(new Error('姓名为必填项'))
@@ -122,8 +132,8 @@ const validateName = (_rule, value, callback) => {
 const validateUsername = (_rule, value, callback) => {
     if (!value) {
         callback(new Error('用户名为必填项'))
-    } else if (/[^a-zA-Z]/.test(value)) {
-        callback(new Error('用户名只能由英文字母组成'))
+    } else if (/[^a-zA-Z0-9]/.test(value)) {
+        callback(new Error('用户名只能由英文字母数字组成'))
     } else {
         callback()
     }
@@ -140,26 +150,75 @@ const empRules = {
 // 工作经历字段规则：只要添加了工作经历，公司、职位、在职日期就必填
 // 在职日期的值是数组，需要指定type为array，否则空数组不会触发required校验
 const exprRules = {
-    company: [{ required: true, message: '公司为必填项', trigger: 'blur' }],
-    job: [{ required: true, message: '职位为必填项', trigger: 'blur' }],
+    company: [{ required: true, validator: validateName, trigger: 'blur' }],
+    job: [{ required: true, validator: validateName, trigger: 'blur' }],
     date: [{ type: 'array', required: true, message: '在职日期为必选项', trigger: 'change' }]
 }
 
 // 员工经历
 // emp_id属性是emp传递到后端到数据库中查询回显才能获取到的内容
-const createExpr = () => ({company:'',job:'',date:'',begin:'',end:''})
-const addExpr = () => {emp.value.exprList.push(createExpr())}
-const deleteExpr = (index) => {emp.value.exprList.splice(index,1)} // index:起始索引，1表示删除元素的个数
+const createExpr = () => ({ company: '', job: '', date: '', begin: '', end: '' })
+const addExpr = () => { emp.value.exprList.push(createExpr()) }
+const deleteExpr = (index) => { emp.value.exprList.splice(index, 1) } // index:起始索引，1表示删除元素的个数
 
 
 
 
 // ---------------- 删除员工 ---------------- 
-const deleteEmp = () => {
+const deleteEmp = async (id, name) => {
+    try {
+        await ElMessageBox.confirm (
+            `您确认删除 ${name} 的员工信息？`,
+            'Warning',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消', // 点击取消就直接抛出异常了不会再执行后面的内容了
+                type: 'warning',
+            }
+        )
 
+        const ids = []
+        ids.push(id)
+        const res = await batchDeleteEmpApi(ids)
+        showMsg(res)
+    } catch (error) {
+        ElMessage.info('Delete canceled')
+    }
 }
-const deleteEmps = () => { // 批量删除员工
 
+const selectedRows = ref([]) // 存放勾选行的数组
+const handleSelectionChange = (rows) => { // 复选框勾选状态变化时触发，selection为当前所有勾选的行
+    selectedRows.value = rows
+}
+
+const batchDelete = async () => { // 批量删除员工
+    // 循环遍历拿到所有name并拼接为字符串
+    let names = ''
+
+    for (let i = 0; i < selectedRows.value.length; i++) {
+        if(i == selectedRows.value.length-1) names = names + selectedRows.value[i].name
+        else names = names + selectedRows.value[i].name + ','
+    }
+
+    try {
+        await ElMessageBox.confirm (
+            `您确认删除 ${names} 的员工信息？`,
+            'Warning',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消', // 点击取消就直接抛出异常了不会再执行后面的内容了
+                type: 'warning',
+            }
+        )
+
+        const ids = []
+        selectedRows.value.forEach(emp => ids.push(emp.id))
+        
+        const res = await batchDeleteEmpApi(ids)
+        showMsg(res)
+    } catch (error) {
+        ElMessage.info('Delete canceled')
+    }
 }
 
 
@@ -189,7 +248,18 @@ const formatTime = (_row, _column, cellValue) => {
 }
 
 // 钩子函数
-onMounted(() => search() )
+onMounted(() => search())
+
+// 显示后端响应信息
+const showMsg = (res) => {
+    if(res.code) {
+        ElMessage.success(res.msg)
+        search()
+    } else {
+        ElMessage.error(res.msg)
+    }
+}
+
 </script>
 
 <template>
@@ -213,16 +283,17 @@ onMounted(() => search() )
             </el-form-item>
             <!-- 升级为从数据库中查到种类，然后显示选择下拉列表 -->
             <el-form-item label="职位">
-                <el-input v-model="searchInfo.job" placeholder="输入职位" clearable :value-on-clear="''"/>
+                <el-input v-model="searchInfo.job" placeholder="输入职位" clearable :value-on-clear="''" />
             </el-form-item>
             <el-form-item label="入职日期">
                 <el-date-picker v-model="searchInfo.date" type="daterange" range-separator="To" start-placeholder="起始日期"
-                    end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''"/>
+                    end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''" />
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="search"><el-icon>
                         <Search />
-                    </el-icon>search</el-button>
+                    </el-icon>搜索</el-button>
+                <el-button type="danger" @click="clear"><el-icon><CircleClose /></el-icon>清空</el-button>
             </el-form-item>
         </el-form>
     </div>
@@ -232,7 +303,7 @@ onMounted(() => search() )
         <el-button type="primary" @click="addEmp"><el-icon>
                 <CirclePlusFilled />
             </el-icon>新增员工</el-button>
-        <el-button type="danger" @click="deleteEmps"><el-icon>
+        <el-button type="danger" @click="batchDelete"><el-icon>
                 <RemoveFilled />
             </el-icon>批量删除</el-button>
     </div>
@@ -241,8 +312,10 @@ onMounted(() => search() )
     <!-- {{ empList }} -->
     <!-- {{ searchInfo }} -->
     <div class="table">
-        <el-table :data="empList" style="width: 100%">
-            <el-table-column type="selection" :selectable="selectable" width="55" align="center" class="check-box"/>
+        <!-- @selection-change这个事件在复选框变化的时候会触发，然后传给函数一个数组 -->
+        <el-table :data="empList" @selection-change="handleSelectionChange" style="width: 100%">
+            <!-- selectable如果没有自定义就是undefined，然后elementplus底层兜底设置为true -->
+            <el-table-column type="selection" :selectable="selectable" width="55" align="center" class="check-box" />
             <el-table-column prop="name" label="姓名" width="120" align="center" />
             <el-table-column label="性别" width="120" align="center">
                 <template #default="scope">
@@ -265,16 +338,22 @@ onMounted(() => search() )
                 </template>
             </el-table-column>
             <el-table-column prop="entryDate" label="入职日期" width="170" align="center" />
-            <el-table-column prop="updateTime" label="更新时间" width="170" align="center" :formatter="formatTime"/>
+            <el-table-column prop="updateTime" label="更新时间" width="170" align="center" :formatter="formatTime" />
             <el-table-column label="工作经历" min-width="60" align="center">
                 <template #default="scope">
-                    <el-button type="primary" size="small" @click="showExpr(scope.row.id)"><el-icon><More /></el-icon>详情</el-button>
+                    <el-button type="info" size="small" @click="showExpr(scope.row.id)">详情<el-icon>
+                            <More />
+                        </el-icon></el-button>
                 </template>
             </el-table-column>
             <el-table-column label="操作" min-width="120" align="center">
                 <template #default="scope">
-                    <el-button type="primary" size="small" @click="editEmp"><el-icon><EditPen /></el-icon>编辑</el-button>
-                    <el-button type="danger" size="small" @click="deleteEmp"><el-icon><Delete /></el-icon>删除</el-button>
+                    <el-button type="primary" size="small" @click="editEmp(scope.row)"><el-icon>
+                            <EditPen />
+                        </el-icon>编辑</el-button>
+                    <el-button type="danger" size="small" @click="deleteEmp(scope.row.id, scope.row.name)"><el-icon>
+                            <Delete />
+                        </el-icon>删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -282,16 +361,9 @@ onMounted(() => search() )
 
     <!-- 分页栏 -->
     <div class="pagination-bar">
-        <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[5, 10, 20, 50]"
-            :background="primary"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[5, 10, 20, 50]"
+            :background="primary" layout="total, sizes, prev, pager, next, jumper" :total="total"
+            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </div>
 
     <!-- 对话框 -->
@@ -302,10 +374,10 @@ onMounted(() => search() )
         <el-dialog v-model="dialogFormVisible" title="新增员工" width="500">
             <el-form ref="empFormRef" :model="emp" :rules="empRules">
                 <el-form-item label="姓名" prop="name">
-                    <el-input v-model="emp.name" placeholder="请输入姓名" clearable/>
+                    <el-input v-model="emp.name" placeholder="请输入姓名" clearable />
                 </el-form-item>
                 <el-form-item label="用户名" prop="username">
-                    <el-input v-model="emp.username" placeholder="请输入用户名" clearable/>
+                    <el-input v-model="emp.username" placeholder="请输入用户名" clearable />
                 </el-form-item>
                 <el-form-item label="性别" prop="gender">
                     <el-select v-model="emp.gender" placeholder="请选择" clearable :value-on-clear="''">
@@ -314,7 +386,7 @@ onMounted(() => search() )
                     </el-select>
                 </el-form-item>
                 <el-form-item label="头像地址">
-                    <el-input v-model="emp.avatar" clearable/>
+                    <el-input v-model="emp.avatar" clearable />
                 </el-form-item>
                 <el-form-item label="部门" prop="deptId">
                     <el-select v-model="emp.deptId" placeholder="请选择" clearable :value-on-clear="''">
@@ -329,24 +401,32 @@ onMounted(() => search() )
                     </el-select>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="addExpr" style="margin-bottom: 10px;"><el-icon><CirclePlusFilled /></el-icon>添加工作经历</el-button>
+                    <el-button type="primary" @click="addExpr" style="margin-bottom: 10px;"><el-icon>
+                            <CirclePlusFilled />
+                        </el-icon>添加工作经历</el-button>
                     <!-- 嵌套一个动态的工作经历表单 -->
                     <!-- 这里不能用el-form嵌套，否则内层表单项会注册到内层el-form上，外层表单的validate()就校验不到它们 -->
+                    <!-- :prop的值是相对与el-form中的:model来指定的 -->
+                    <!-- :prop必须是表单对象中的属性路径，对于数组的索引这里也是用.index来表示 -->
                     <!-- prop需要写成 exprList.下标.属性 的路径形式，校验规则通过 :rules 单独指定 -->
                     <div v-for="(expr, index) in emp.exprList" :key="index" class="inner-form">
                         <el-form-item label="公司" :prop="`exprList.${index}.company`" :rules="exprRules.company">
                             <el-input v-model="expr.company" placeholder="请输入公司名称" clearable />
                         </el-form-item>
+                        <!-- 直接使用prop里面的内容就是内容，使用:prop里面的内容就是变量表达式，变量表达式的结果才是对应的内容 -->
                         <el-form-item label="职位" :prop="`exprList.${index}.job`" :rules="exprRules.job">
                             <el-input v-model="expr.job" placeholder="请输入职位" clearable />
                         </el-form-item>
                         <el-form-item label="在职日期" :prop="`exprList.${index}.date`" :rules="exprRules.date">
-                            <el-date-picker v-model="expr.date" type="daterange" range-separator="To" start-placeholder="起始日期"
-                                end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''" @change="(val) => handleDateChange(expr,val)"/>
-                                <!-- @change是选项改变后触发 -->
+                            <el-date-picker v-model="expr.date" type="daterange" range-separator="To"
+                                start-placeholder="起始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD"
+                                :value-on-clear="''" @change="(val) => handleDateChange(expr, val)" />
+                            <!-- @change是选项改变后触发 -->
                         </el-form-item>
                         <el-form-item>
-                            <el-button type="danger" @click="deleteExpr(index)"><el-icon><Delete /></el-icon></el-button>
+                            <el-button type="danger" @click="deleteExpr(index)"><el-icon>
+                                    <Delete />
+                                </el-icon></el-button>
                         </el-form-item>
                     </div>
                 </el-form-item>
@@ -420,7 +500,4 @@ onMounted(() => search() )
     margin-right: 10px;
     margin-bottom: 20px;
 }
-
-
-
 </style>

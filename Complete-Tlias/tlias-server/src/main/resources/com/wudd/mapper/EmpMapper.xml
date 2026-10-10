@@ -72,4 +72,31 @@
             </if>
         </where>
     </select>
+
+    <insert id="addExpr">
+        insert into expr(company,begin,end,job,emp_id) values
+        <foreach collection="exprList" item="expr" separator=",">
+            (#{expr.company},#{expr.begin},#{expr.end},#{expr.job},#{expr.empId})
+        </foreach>
+    </insert>
+
+    <!-- 确保ids里面有内容才会有SQL语句 -->
+    <delete id="deleteEmps">
+        delete from emp
+        <where>
+            <foreach collection="ids" item="id" separator="or">
+                id = #{id}
+            </foreach>
+        </where>
+    </delete>
+    <delete id="deleteExprs">
+        delete from expr
+        <where>
+            <foreach collection="ids" item="id" separator="or">
+                emp_id = #{id}
+            </foreach>
+        </where>
+    </delete>
+
+
 </mapper>

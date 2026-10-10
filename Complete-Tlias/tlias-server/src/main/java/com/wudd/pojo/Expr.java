@@ -15,4 +15,5 @@ public class Expr {
     private LocalDate begin;
     private LocalDate end;
     private String job;
+    private Integer empId; // 前端用不到，只有到服务器添加工作经历的时候才有用
 }
