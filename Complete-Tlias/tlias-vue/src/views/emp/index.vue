@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { queryEmpApi } from "@/api/emp";
+import { queryEmpApi, addEmpApi } from "@/api/emp";
 import { queryDeptListApi } from '@/api/dept';
 import { queryJobListApi } from '@/api/job';
 import {ElMessage} from 'element-plus'
@@ -45,18 +45,33 @@ const dialogFormVisible = ref(false) // 对话框
 
 const cancel = () => {
     dialogFormVisible.value = false
-    emp.value = {name:'',username:'',gender:'',avatar:'',dept:'',job:'',entryDate:'',exprList:[]}
+    emp.value = {name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]}
+    empFormRef.value?.clearValidate() // 重置后清除残留的校验提示
     jobList.value = []
     deptList.value = []
 }
-const confirm = () => {
-    dialogFormVisible.value = false
+const confirm = async () => { // 将emp传递到服务器
+    // 先对整个表单（包括动态的工作经历表单项）进行校验，校验不通过则不提交
+    const valid = await empFormRef.value.validate().catch(() => false)
+    if (!valid) return
 
+    dialogFormVisible.value = false
+    const res = await addEmpApi(emp.value)
+
+    if(res.code) {
+        ElMessage.success(res.msg)
+    } else {
+        ElMessage.error(res.msg)
+    }
+
+    emp.value = {name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]}
+    empFormRef.value.clearValidate() // 重置后清除残留的校验提示
 }
 
 // ------------ 新增员工 ------------ 
+// emp向服务器传递员工对象所需要的数据，entryDate，updateTime可以不用传递
 // emp最终是传递给服务器，然后服务器更具emp添加员工到数据库
-const emp = ref({name:'',username:'',gender:'',avatar:'',dept:'',job:'',entryDate:'',exprList:[]})
+const emp = ref({name:'',username:'',gender:'',avatar:'',deptId:'',jobId:'',exprList:[]})
 const handleDateChange = (expr,val) => {
     if(Array.isArray(val)) {
         expr.begin = val[0]
@@ -85,6 +100,49 @@ const addEmp = async () => {
     } else {
         ElMessage.error(jobRes.msg)
     }
+}
+
+// ------------ 新增员工表单校验 ------------
+const empFormRef = ref() // 表单引用，用于触发表单校验
+
+// 姓名：必填，不能包含空格和符号（不限制字数，允许中文、英文、数字）
+const validateName = (_rule, value, callback) => {
+    if (!value) {
+        callback(new Error('姓名为必填项'))
+    } else if (/\s/.test(value)) {
+        callback(new Error('姓名不能包含空格'))
+    } else if (/[^一-龥a-zA-Z0-9]/.test(value)) {
+        callback(new Error('姓名不能包含符号'))
+    } else {
+        callback()
+    }
+}
+
+// 用户名：必填，只能由英文字母组成（不能有数字、符号、空格）
+const validateUsername = (_rule, value, callback) => {
+    if (!value) {
+        callback(new Error('用户名为必填项'))
+    } else if (/[^a-zA-Z]/.test(value)) {
+        callback(new Error('用户名只能由英文字母组成'))
+    } else {
+        callback()
+    }
+}
+
+const empRules = {
+    name: [{ required: true, validator: validateName, trigger: 'blur' }],
+    username: [{ required: true, validator: validateUsername, trigger: 'blur' }],
+    gender: [{ required: true, message: '性别为必选项', trigger: 'change' }],
+    deptId: [{ required: true, message: '部门为必选项', trigger: 'change' }],
+    jobId: [{ required: true, message: '职位为必选项', trigger: 'change' }]
+}
+
+// 工作经历字段规则：只要添加了工作经历，公司、职位、在职日期就必填
+// 在职日期的值是数组，需要指定type为array，否则空数组不会触发required校验
+const exprRules = {
+    company: [{ required: true, message: '公司为必填项', trigger: 'blur' }],
+    job: [{ required: true, message: '职位为必填项', trigger: 'blur' }],
+    date: [{ type: 'array', required: true, message: '在职日期为必选项', trigger: 'change' }]
 }
 
 // 员工经历
@@ -242,14 +300,14 @@ onMounted(() => search() )
         <!-- {{ deptList }} -->
         <!-- {{ jobList }} -->
         <el-dialog v-model="dialogFormVisible" title="新增员工" width="500">
-            <el-form :model="emp">
-                <el-form-item label="姓名">
+            <el-form ref="empFormRef" :model="emp" :rules="empRules">
+                <el-form-item label="姓名" prop="name">
                     <el-input v-model="emp.name" placeholder="请输入姓名" clearable/>
                 </el-form-item>
-                <el-form-item label="用户名">
+                <el-form-item label="用户名" prop="username">
                     <el-input v-model="emp.username" placeholder="请输入用户名" clearable/>
                 </el-form-item>
-                <el-form-item label="性别">
+                <el-form-item label="性别" prop="gender">
                     <el-select v-model="emp.gender" placeholder="请选择" clearable :value-on-clear="''">
                         <el-option label="男" value="1" />
                         <el-option label="女" value="2" />
@@ -258,14 +316,14 @@ onMounted(() => search() )
                 <el-form-item label="头像地址">
                     <el-input v-model="emp.avatar" clearable/>
                 </el-form-item>
-                <el-form-item label="部门">
-                    <el-select v-model="emp.dept" placeholder="请选择" clearable :value-on-clear="''">
+                <el-form-item label="部门" prop="deptId">
+                    <el-select v-model="emp.deptId" placeholder="请选择" clearable :value-on-clear="''">
                         <!-- 循环获取部门选项 -->
                         <el-option v-for="item in deptList" :key="item.id" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="职位">
-                    <el-select v-model="emp.job" placeholder="请选择" clearable :value-on-clear="''">
+                <el-form-item label="职位" prop="jobId">
+                    <el-select v-model="emp.jobId" placeholder="请选择" clearable :value-on-clear="''">
                         <!-- 循环获取职位选项 -->
                         <el-option v-for="item in jobList" :key="item.id" :label="item.name" :value="item.id" />
                     </el-select>
@@ -273,14 +331,16 @@ onMounted(() => search() )
                 <el-form-item>
                     <el-button type="primary" @click="addExpr" style="margin-bottom: 10px;"><el-icon><CirclePlusFilled /></el-icon>添加工作经历</el-button>
                     <!-- 嵌套一个动态的工作经历表单 -->
-                    <el-form :inline="true" v-for="(expr, index) in emp.exprList" :key="index" class="inner-form">
-                        <el-form-item label="公司">
+                    <!-- 这里不能用el-form嵌套，否则内层表单项会注册到内层el-form上，外层表单的validate()就校验不到它们 -->
+                    <!-- prop需要写成 exprList.下标.属性 的路径形式，校验规则通过 :rules 单独指定 -->
+                    <div v-for="(expr, index) in emp.exprList" :key="index" class="inner-form">
+                        <el-form-item label="公司" :prop="`exprList.${index}.company`" :rules="exprRules.company">
                             <el-input v-model="expr.company" placeholder="请输入公司名称" clearable />
                         </el-form-item>
-                        <el-form-item label="职位">
+                        <el-form-item label="职位" :prop="`exprList.${index}.job`" :rules="exprRules.job">
                             <el-input v-model="expr.job" placeholder="请输入职位" clearable />
                         </el-form-item>
-                        <el-form-item label="入职日期">
+                        <el-form-item label="在职日期" :prop="`exprList.${index}.date`" :rules="exprRules.date">
                             <el-date-picker v-model="expr.date" type="daterange" range-separator="To" start-placeholder="起始日期"
                                 end-placeholder="结束日期" value-format="YYYY-MM-DD" :value-on-clear="''" @change="(val) => handleDateChange(expr,val)"/>
                                 <!-- @change是选项改变后触发 -->
@@ -288,7 +348,7 @@ onMounted(() => search() )
                         <el-form-item>
                             <el-button type="danger" @click="deleteExpr(index)"><el-icon><Delete /></el-icon></el-button>
                         </el-form-item>
-                    </el-form>
+                    </div>
                 </el-form-item>
             </el-form>
 
@@ -353,4 +413,14 @@ onMounted(() => search() )
 .table {
     margin-bottom: 10px;
 }
+
+/* 工作经历的动态表单项原本依赖el-form的inline布局，改用div后需要手动恢复行内排列 */
+.inner-form :deep(.el-form-item) {
+    display: inline-flex;
+    margin-right: 10px;
+    margin-bottom: 20px;
+}
+
+
+
 </style>

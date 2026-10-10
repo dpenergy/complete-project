@@ -5,6 +5,6 @@ import request from "@/utils/request";
 // 测试请求： 'emps?apifoxApiId=521625074'
 const queryEmpApi =  (name,gender,job,begin,end) => request.get(`/emps?name=${name}&gender=${gender}&job=${job}&begin=${begin}&end=${end}`)
 
+const addEmpApi = (emp) => request.post('/emps',emp)
 
-
-export {queryEmpApi}
+export {queryEmpApi, addEmpApi}
