@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { queryEmpApi, addEmpApi, batchDeleteEmpApi} from "@/api/emp";
+import { queryEmpApi, addEmpApi, batchDeleteEmpApi, updateEmpApi} from "@/api/emp";
 import { queryDeptListApi } from '@/api/dept';
 import { queryJobListApi } from '@/api/job';
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -8,7 +8,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 // ------------ 搜索表单 ------------ 
 // ------------ 员工列表查询 ------------ 
-const searchInfo = ref({ name: '', gender: '', job: '', date: '', begin: '', end: '' }) // 搜索表单项
+const searchInfo = ref({ name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:5 ,currentPage:1}) // 搜索表单项
 // 侦听searchInfo中的date属性
 watch(() => searchInfo.value.date, (newVal, oldVal) => {
     // 可选链表达式，处理null和undefined
@@ -23,23 +23,30 @@ watch(() => searchInfo.value.date, (newVal, oldVal) => {
 
 const empList = ref([]) // 表格
 const search = async () => {
-    const res = await queryEmpApi(searchInfo.value.name, searchInfo.value.gender, searchInfo.value.job, searchInfo.value.begin, searchInfo.value.end)
+    const res = await queryEmpApi(searchInfo.value.name, searchInfo.value.gender, searchInfo.value.job, searchInfo.value.begin, searchInfo.value.end, searchInfo.value.pageSize, searchInfo.value.currentPage)
 
-    console.log(res);
-
+    // console.log(res);
 
     if (res.code) {
         empList.value = res.data.empList
+        empList.value.forEach(emp => {
+            if(emp.exprList.length > 0)
+            emp.exprList.forEach(expr => {
+                expr.date = []
+                expr.date.push(expr.begin)
+                expr.date.push(expr.end)
+            })
+        })
         total.value = res.data.total
-        console.log(empList.value);
-        console.log(total.value);
+        // console.log(empList.value);
+        // console.log(total.value);
     } else {
         ElMessage.error(res.msg)
     }
 }
 
 const clear = () => {
-    searchInfo.value = { name: '', gender: '', job: '', date: '', begin: '', end: '' }
+    searchInfo.value = { name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:5 ,currentPage:1}
     search()
 }
 
@@ -49,13 +56,13 @@ const dialogFormVisible = ref(false) // 对话框
 
 const cancel = () => {
     dialogFormVisible.value = false
+    isAddEmp.value = false
+    isEditEmp.value = false
     emp.value = { name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] }
-    empFormRef.value?.clearValidate() // 重置后清除残留的校验提示
     jobList.value = []
     deptList.value = []
 }
 const confirm = async () => { // 将emp传递到服务器
-
     // 先对整个表单（包括动态的工作经历表单项）进行校验，校验不通过则不提交
     // 如果校验通过validate就直接返回true不会执行catch，如果失败validate就直接抛出异常然后catch捕获返回false
     const valid = await empFormRef.value.validate().catch(() => false)
@@ -64,23 +71,36 @@ const confirm = async () => { // 将emp传递到服务器
         return
     }
 
-    const res = await addEmpApi(emp.value)
+    let res;
+    if(isAddEmp.value) {
+        res = await addEmpApi(emp.value)
+        isAddEmp.value = false
+    }
+
+    if(isEditEmp.value) {
+        res = await updateEmpApi(emp.value)
+        isEditEmp.value = false
+    }
+    
 
     if (res.code) { // 如果添加成功，就可以直接关掉对话框了
         dialogFormVisible.value = false
         ElMessage.success(res.msg)
         emp.value = { name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] }
-        empFormRef.value.clearValidate() // 重置后清除残留的校验提示
         search()
     } else { // 如果没有成功，就保留对话框内容，让用户修改
+
         ElMessage.error(res.msg)
     }
 }
 
+
+
 // ------------ 新增员工 ------------ 
 // emp向服务器传递员工对象所需要的数据，entryDate，updateTime可以不用传递
 // emp最终是传递给服务器，然后服务器更具emp添加员工到数据库
-const emp = ref({ name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] })
+// emp是emp对象但是可以改变指向的对象，指向拷贝出来的对象，这样如果取消修改就不会影响原来的数据，所以设置为let变量
+let emp = ref({ name: '', username: '', gender: '', avatar: '', deptId: '', jobId: '', exprList: [] })
 const handleDateChange = (expr, val) => {
     if (Array.isArray(val)) {
         expr.begin = val[0]
@@ -93,14 +113,18 @@ const handleDateChange = (expr, val) => {
 
 const jobList = ref([])
 const deptList = ref([])
+const isAddEmp = ref(false) // 对话框中实现新增和修改员工两个操作，用变量来区分操作
 const addEmp = async () => {
+    empFormRef.value?.clearValidate() // 清除残留的校验提示
+
+    isAddEmp.value = true
     dialogFormVisible.value = true
 
     const res = await queryDeptListApi() // 获取部门信息
     if (res.code) {
         deptList.value = res.data
     } else {
-        ElMessage.error(jobRes.msg)
+        ElMessage.error(res.msg) // 这里不能用jobRes.msg，jobRes在下面才声明，会抛ReferenceError
     }
 
     const jobRes = await queryJobListApi() // 获取职位信息
@@ -112,6 +136,7 @@ const addEmp = async () => {
 }
 
 // ------------ 新增员工表单校验 ------------
+
 const empFormRef = ref() // 表单引用，用于触发表单校验
 
 // 姓名：必填，不能包含空格和符号（不限制字数，允许中文、英文、数字）
@@ -192,6 +217,11 @@ const handleSelectionChange = (rows) => { // 复选框勾选状态变化时触�
 }
 
 const batchDelete = async () => { // 批量删除员工
+    if(selectedRows.value.length == 0) {
+        ElMessage.warning("当前未选中任何数据!")
+        return
+    }
+
     // 循环遍历拿到所有name并拼接为字符串
     let names = ''
 
@@ -224,20 +254,51 @@ const batchDelete = async () => { // 批量删除员工
 
 
 // ---------------- 编辑员工 ---------------- 
-const editEmp = () => {
+const isEditEmp = ref(false)
+const editEmp = async (row) => {
+    empFormRef.value?.clearValidate() // 重清除残留的校验提示
 
+    // structuredClone无法克隆Vue的响应式代理对象（表格传来的row是Proxy），会抛出DataCloneError，导致后面代码全部不执行
+    // row本身就是纯JSON数据，用JSON序列化实现深拷贝，既能脱离empList原数据，又能去掉响应式
+    emp.value = JSON.parse(JSON.stringify(row))
+
+    const res = await queryDeptListApi() // 获取部门信息
+    if (res.code) {
+        deptList.value = res.data
+    } else {
+        ElMessage.error(res.msg) // 这里不能用jobRes.msg，jobRes在下面才声明，会抛ReferenceError导致对话框打不开
+    }
+
+    const jobRes = await queryJobListApi() // 获取职位信息
+    if (jobRes.code) {
+        jobList.value = jobRes.data
+    } else {
+        ElMessage.error(jobRes.msg)
+    }
+
+    isEditEmp.value = true
+    dialogFormVisible.value = true
+}
+
+// ---------------- 显示工作经历 ---------------- 
+const exprTableVisable = ref(false) // 工作经历表，包裹在对话框中
+const exprs = ref([])
+const empName = ref('')
+const showExpr = (exprList, name) => {
+    exprs.value = exprList // 每一次使用都是重新赋值，所以不用清理
+    empName.value = name
+    exprTableVisable.value = true
 }
 
 
 // ---------------- 分页条 ---------------- 
-const currentPage = ref(1)  // 分页条
-const pageSize = ref(5)
+// 因为currentPage和pageSize在查询的时候要一起和查询信息发送到服务器所以就放到查询信息里面去了
 const total = ref(0)
 const handleCurrentChange = () => {
-
+    search()
 }
 const handleSizeChange = () => {
-
+    search()
 }
 
 
@@ -263,6 +324,14 @@ const showMsg = (res) => {
 </script>
 
 <template>
+    {{ pageSize }}
+    {{ currentPage }}
+    <!-- {{ total }} -->
+    <!-- {{ emp }} -->
+    <!-- {{ exprs }} -->
+    <!-- {{ empList }} -->
+    <!-- {{ deptList }} -->
+    <!-- {{ jobList }} -->
     <!-- 标题 -->
     <div class="head">
         <h1>员工管理</h1>
@@ -309,8 +378,6 @@ const showMsg = (res) => {
     </div>
 
     <!-- 表格 -->
-    <!-- {{ empList }} -->
-    <!-- {{ searchInfo }} -->
     <div class="table">
         <!-- @selection-change这个事件在复选框变化的时候会触发，然后传给函数一个数组 -->
         <el-table :data="empList" @selection-change="handleSelectionChange" style="width: 100%">
@@ -327,21 +394,14 @@ const showMsg = (res) => {
                     <img :src="scope.row.avatar" height="40px">
                 </template>
             </el-table-column>
-            <el-table-column label="部门" width="140" align="center">
-                <template #default="scope">
-                    {{ (scope.row.dept == null || scope.row.dept == '') ? '暂无' : scope.row.dept }}
-                </template>
-            </el-table-column>
-            <el-table-column label="职位" width="120" align="center">
-                <template #default="scope">
-                    {{ (scope.row.job == null || scope.row.job == '') ? '暂时打杂' : scope.row.job }}
-                </template>
-            </el-table-column>
+            <el-table-column prop="dept" label="部门" width="140" align="center" />
+            <el-table-column prop="job" label="职位" width="120" align="center" />
             <el-table-column prop="entryDate" label="入职日期" width="170" align="center" />
             <el-table-column prop="updateTime" label="更新时间" width="170" align="center" :formatter="formatTime" />
             <el-table-column label="工作经历" min-width="60" align="center">
                 <template #default="scope">
-                    <el-button type="info" size="small" @click="showExpr(scope.row.id)">详情<el-icon>
+                    <span v-if="scope.row.exprList.length == 0">无</span>
+                    <el-button v-else type="info" size="small" @click="showExpr(scope.row.exprList,scope.row.name)">详情<el-icon>
                             <More />
                         </el-icon></el-button>
                 </template>
@@ -361,16 +421,13 @@ const showMsg = (res) => {
 
     <!-- 分页栏 -->
     <div class="pagination-bar">
-        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[5, 10, 20, 50]"
+        <el-pagination v-model:current-page="searchInfo.currentPage" v-model:page-size="searchInfo.pageSize" :page-sizes="[5, 10, 20, 50]"
             :background="primary" layout="total, sizes, prev, pager, next, jumper" :total="total"
             @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </div>
 
     <!-- 对话框 -->
     <div class="dialog">
-        {{ emp }}
-        <!-- {{ deptList }} -->
-        <!-- {{ jobList }} -->
         <el-dialog v-model="dialogFormVisible" title="新增员工" width="500">
             <el-form ref="empFormRef" :model="emp" :rules="empRules">
                 <el-form-item label="姓名" prop="name">
@@ -391,13 +448,13 @@ const showMsg = (res) => {
                 <el-form-item label="部门" prop="deptId">
                     <el-select v-model="emp.deptId" placeholder="请选择" clearable :value-on-clear="''">
                         <!-- 循环获取部门选项 -->
-                        <el-option v-for="item in deptList" :key="item.id" :label="item.name" :value="item.id" />
+                        <el-option v-for="dept in deptList" :key="dept.id" :label="dept.name" :value="(dept.id).toString()" />
                     </el-select>
                 </el-form-item>
                 <el-form-item label="职位" prop="jobId">
                     <el-select v-model="emp.jobId" placeholder="请选择" clearable :value-on-clear="''">
                         <!-- 循环获取职位选项 -->
-                        <el-option v-for="item in jobList" :key="item.id" :label="item.name" :value="item.id" />
+                        <el-option v-for="job in jobList" :key="job.id" :label="job.name" :value="(job.id).toString()" />
                     </el-select>
                 </el-form-item>
                 <el-form-item>
@@ -438,6 +495,18 @@ const showMsg = (res) => {
                     <el-button type="primary" @click="confirm">确认</el-button>
                 </div>
             </template>
+        </el-dialog>
+    </div>
+
+    <!-- 显示工作经历的对话框 -->
+    <div class="expr-dialog">
+        <el-dialog v-model="exprTableVisable" :title="empName+'——工作经历'" width="800">
+            <el-table :data="exprs">
+            <el-table-column prop="company" label="公司" width="150" />
+            <el-table-column prop="job" label="职位" width="200" />
+            <el-table-column prop="begin" label="入职日期" width="200" />
+            <el-table-column prop="end" label="离职日期" />
+            </el-table>
         </el-dialog>
     </div>
 

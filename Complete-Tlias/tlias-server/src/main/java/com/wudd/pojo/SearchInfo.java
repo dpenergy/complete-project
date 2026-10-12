@@ -15,4 +15,7 @@ public class SearchInfo {
     private String job;
     private LocalDate begin;
     private LocalDate end;
+    private Integer pageSize;
+    private Integer currentPage;
+    private int startIndex;
 }

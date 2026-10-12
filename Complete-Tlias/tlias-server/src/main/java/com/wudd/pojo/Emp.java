@@ -15,7 +15,7 @@ public class Emp {
     private Integer id;
     private String name;
     private String username;
-    private Integer gender;
+    private String gender;
     private String avatar;
     private String dept;
     private String deptId; // 这样从数据库拿去数据和传入数据都很方便，按需使用

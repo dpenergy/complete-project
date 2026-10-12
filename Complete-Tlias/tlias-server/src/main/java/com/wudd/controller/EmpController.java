@@ -43,4 +43,10 @@ public class EmpController {
         log.info("批量删除员工请求");
         return empServer.deleteEmps(ids);
     }
+
+    @PutMapping
+    public Result updateEmp(@RequestBody Emp emp){
+        log.info("修改员工信息请求");
+        return empServer.updateEmp(emp);
+    }
 }

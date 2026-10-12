@@ -21,6 +21,9 @@ public class EmpServerImpl implements EmpServer {
         int total = empMapper.queryEmpCount(searchInfo);
         if(total == 0) return Result.error("没有查询到相关数据");
 
+        // limit部分不接收算术式,同时如果传递两个参数给mapper接口在用xml映射就得自己配置参数映射，所以自己封装到searchInfo里面
+        searchInfo.setStartIndex((searchInfo.getCurrentPage() - 1) *  searchInfo.getPageSize());
+        System.out.println(searchInfo.getStartIndex());
         List<Emp> rows = empMapper.queryEmpList(searchInfo);
 
         return Result.success(new SearchResult(total, rows));
@@ -50,23 +53,6 @@ public class EmpServerImpl implements EmpServer {
         return Result.successWithMsg("✔添加成功！");
     }
 
-    //@Transactional
-    //@Override
-    //public Result deleteEmp(Integer id) {
-    //    // 1. 首先查询是否有这个id存在
-    //    if(null == empMapper.queryEmpById(id)) {
-    //        return Result.error("数据内不存在该员工的信息！");
-    //    }
-    //
-    //    // 2. 删除员工经历
-    //    empMapper.deleteExpr(id);
-    //
-    //    // 3. 删除员工
-    //    empMapper.deleteEmp(id);
-    //
-    //    return Result.successWithMsg("已删除该员工的相关信息！");
-    //}
-
     @Transactional
     @Override
     public Result deleteEmps(List<Integer> ids) {
@@ -77,5 +63,32 @@ public class EmpServerImpl implements EmpServer {
         empMapper.deleteExprs(ids);
 
         return Result.successWithMsg("已全部删除!");
+    }
+
+    @Transactional
+    @Override
+    public Result updateEmp(Emp emp) { // emp是完整的员工信息
+        emp.setUpdateTime(LocalDateTime.now());
+
+        // 由于工作经历的empId属性只有在后端处理数据的时候才会用到，所以在前端没有去设置
+        emp.getExprList().forEach(expr -> expr.setEmpId(emp.getId()));
+
+        // 1. 该员工原有的所有工作经历，然后在添加新的
+
+        empMapper.deleteExprByEmpId(emp.getId()); // 如果没有查询到就没有查询到
+        if(!emp.getExprList().isEmpty()) {
+            empMapper.addExpr(emp.getExprList());
+        }
+
+        // 2. 重置所有的员工字段
+        // 用户名不可改变
+        Emp oldEmp = empMapper.queryEmpById(emp.getId());
+        if(!oldEmp.getUsername().equals(emp.getUsername())) {
+            return Result.error("用户名不修改!");
+        }
+
+        empMapper.updateEmp(emp);
+
+        return Result.successWithMsg("已更新员工信息!");
     }
 }

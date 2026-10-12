@@ -12,7 +12,9 @@
         <result property="gender" column="gender"/>
         <result property="avatar" column="avatar"/>
         <result property="dept" column="dept_name"/>
+        <result property="deptId" column="dept_id"/>
         <result property="job" column="emp_job"/>
+        <result property="jobId" column="job_id"/>
         <result property="entryDate" column="entry_date"/>
         <result property="updateTime" column="update_time"/>
 
@@ -50,10 +52,10 @@
 
     <select id="queryEmpList" resultMap="EmpWithExprMap">
         select e.id as emp_id, e.name as emp_name, username, gender, avatar, entry_date, e.update_time as update_time,
-               d.name as dept_name,
-               j.name as emp_job,
+               d.name as dept_name,d.id as dept_id,
+               j.name as emp_job,j.id as job_id,
                ex.id as expr_id,company, ex.job as expr_job, begin, end
-        from emp e
+        from (select * from emp limit #{startIndex},#{pageSize}) e
         left join dept d on e.dept_id=d.id
         left join job j on e.job_id=j.id
         left join expr ex on e.id=ex.emp_id

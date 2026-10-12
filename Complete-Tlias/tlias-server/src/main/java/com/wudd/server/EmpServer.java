@@ -13,4 +13,6 @@ public interface EmpServer {
     //Result deleteEmp(Integer id);
 
     Result deleteEmps(List<Integer> ids);
+
+    Result updateEmp(Emp emp);
 }

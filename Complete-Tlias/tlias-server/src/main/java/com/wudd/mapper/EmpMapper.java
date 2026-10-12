@@ -32,6 +32,12 @@ public interface EmpMapper {// 同时处理emp表和expr表
     @Select("select * from emp where id = #{id}")
     Emp queryEmpById(Integer id);
 
+    @Delete("delete from expr where emp_id = #{id}")
+    void deleteExprByEmpId(Integer id);
+
+    @Update("update emp set name=#{name}, gender=#{gender}, avatar=#{avatar}, dept_id=#{deptId},job_id=#{jobId}, update_time=#{updateTime} where id=#{id}")
+    void updateEmp(Emp emp);
+
     //@Delete("delete from expr where emp_id = #{id}")
     //void deleteExpr(Integer id);
 
