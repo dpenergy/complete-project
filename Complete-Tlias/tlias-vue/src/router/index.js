@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 // @/表示...src/
-// 引入页面组件
+// ----------- 引入页面组件 ----------- 
 // vite构建工具导入时，如果指定路径到文件夹，那么它会自动找该文件夹下面的index.js文件但是.vue没有配置的话就不行，当前是没有配置过的，所以不行
 import ClazzView from '@/views/clazz/index.vue'
 import DeptView from '@/views/dept/index.vue'
@@ -14,8 +14,8 @@ import StuReportView from '@/views/report/stu-report.vue'
 import EmpReportView from '@/views/report/emp-report.vue'
 import LayoutView from '@/views/layout/index.vue'
 
-// 定义路由规则
-// 当el-menu-item被点击的时候就会跳转岛路由请求，即为当前路径下添加/index,然后组件会自动加载到router-view标签所在位置
+// ----------- 定义路由规则 ----------- 
+// 当el-menu-item被点击的时候就会跳转到路由请求，即为当前路径下添加/index,然后路由实例中的组件会自动加载到router-view标签所在位置
 // 当routes里面实例path路径和el-menu-item中的index属性相同是就匹配成功，就调用routes对应View组件填充到router-view标签
 const routes = [
   {

@@ -1,10 +1,53 @@
 <script setup>
 import avatarUrl from '@/assets/img/avatar.jpg'
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 const username = ref('wudd');
-const route = useRoute();// 获取当前路由信息
+const route = useRouter();// 获取当前路由信息（不要写错了小心一点）
+
+const exit = () => {
+    ElMessageBox.confirm(
+        '您确定退出登录吗？',
+        'Warning',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    )
+    .then(() => {
+        // console.log('???????')
+        
+        localStorage.removeItem('admi')
+        // console.log('!!!!!!!!')
+        
+        username.value = ''
+        // console.log('+++++++++')
+        route.push('/login')
+        // console.log(')))))))))')
+        ElMessage.success('已退出登录')
+        // console.log('(((())))')
+    })
+    .catch(() => {
+        ElMessage.info('用户取消操作')
+    })
+}
+
+
+onMounted(() => {
+    setUsername()
+})
+
+const setUsername = () => {
+    const admi = JSON.parse(localStorage.getItem('admi'))
+    if (admi && admi.username) {
+        username.value = admi.username
+    }
+}
+
+
 </script>
 
 <template>
@@ -13,7 +56,7 @@ const route = useRoute();// 获取当前路由信息
         <el-container class="outer-container">
             <!-- Header -->
             <el-header class="header">
-                <el-page-header title="Exit">
+                <el-page-header title="Exit" @click="exit">
                     <template #content>
                         <div class="ph-flex-center">
                             <el-avatar :size="32" shape="circle" class="avatar" v-bind:src="avatarUrl" />

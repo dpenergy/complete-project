@@ -8,7 +8,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 // ------------ 搜索表单 ------------ 
 // ------------ 员工列表查询 ------------ 
-const searchInfo = ref({ name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:5 ,currentPage:1}) // 搜索表单项
+const searchInfo = ref({ name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:10 ,currentPage:1}) // 搜索表单项
 // 侦听searchInfo中的date属性
 watch(() => searchInfo.value.date, (newVal, oldVal) => {
     // 可选链表达式，处理null和undefined
@@ -46,7 +46,11 @@ const search = async () => {
 }
 
 const clear = () => {
-    searchInfo.value = { name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:5 ,currentPage:1}
+    // 分页情况不变
+    let pageSize = searchInfo.value.pageSize
+    let currentPage = searchInfo.value.currentPage
+
+    searchInfo.value = { name: '', gender: '', job: '', date: '', begin: '', end: '' ,pageSize:pageSize ,currentPage:currentPage}
     search()
 }
 
@@ -421,7 +425,7 @@ const showMsg = (res) => {
 
     <!-- 分页栏 -->
     <div class="pagination-bar">
-        <el-pagination v-model:current-page="searchInfo.currentPage" v-model:page-size="searchInfo.pageSize" :page-sizes="[5, 10, 20, 50]"
+        <el-pagination v-model:current-page="searchInfo.currentPage" v-model:page-size="searchInfo.pageSize" :page-sizes="[10, 15, 20, 25, 30]"
             :background="primary" layout="total, sizes, prev, pager, next, jumper" :total="total"
             @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </div>
