@@ -344,6 +344,7 @@ const showMsg = (res) => {
     <!-- 搜索栏 -->
     <div class="search-box">
         <el-form :inline="true" :model="searchInfo" class="search-form">
+        <!-- <el-form :inline="true" :model="searchInfo"> -->
             <el-form-item label="姓名">
                 <el-input v-model="searchInfo.name" placeholder="输入姓名" clearable />
             </el-form-item>
@@ -373,12 +374,8 @@ const showMsg = (res) => {
 
     <!-- 操作 -->
     <div class="outter-btn">
-        <el-button type="primary" @click="addEmp"><el-icon>
-                <CirclePlusFilled />
-            </el-icon>新增员工</el-button>
-        <el-button type="danger" @click="batchDelete"><el-icon>
-                <RemoveFilled />
-            </el-icon>批量删除</el-button>
+        <el-button type="primary" @click="addEmp">+ 新增员工</el-button>
+        <el-button type="danger" @click="batchDelete">- 批量删除</el-button>
     </div>
 
     <!-- 表格 -->

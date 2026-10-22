@@ -49,4 +49,10 @@ public class EmpController {
         log.info("修改员工信息请求");
         return empServer.updateEmp(emp);
     }
+
+    @GetMapping("/headers")
+    public Result queryHeaderList() {
+        log.info("可选班主任信息查询");
+        return empServer.queryHeaderList();
+    }
 }

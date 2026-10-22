@@ -14,3 +14,5 @@ export const batchDeleteEmpApi = (ids) => { // ids是员工id数组,单条数据
 }
 
 export const updateEmpApi = (emp) => request.put('/emps',emp)
+
+export const queryHeaderListApi = () => request.get('/emps/headers')

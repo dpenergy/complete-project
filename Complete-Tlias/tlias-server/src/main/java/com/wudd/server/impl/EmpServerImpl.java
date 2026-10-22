@@ -91,4 +91,14 @@ public class EmpServerImpl implements EmpServer {
 
         return Result.successWithMsg("已更新员工信息!");
     }
+
+    @Override
+    public Result queryHeaderList() {
+        List<Emp> headerList = empMapper.queryHeaderList();
+        if(headerList.isEmpty()) {
+            return Result.error("当前没有任何可选的班主任信息！");
+        }
+
+        return Result.success(headerList);
+    }
 }

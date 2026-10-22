@@ -12,7 +12,7 @@ const request = axios.create({
     timeout: 600000
 })
 
-// 给请求添加上token
+// 给请求添加上token令牌
 request.interceptors.request.use(
     (config) => { // 成功回调
         // 获取token并添加到headers里面

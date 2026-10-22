@@ -15,4 +15,6 @@ public interface EmpServer {
     Result deleteEmps(List<Integer> ids);
 
     Result updateEmp(Emp emp);
+
+    Result queryHeaderList();
 }
