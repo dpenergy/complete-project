@@ -1,19 +1,18 @@
 package com.wudd.mapper;
 
 import com.wudd.pojo.Emp;
+import com.wudd.pojo.EmpSearchInfo;
 import com.wudd.pojo.Expr;
-import com.wudd.pojo.SearchInfo;
 import org.apache.ibatis.annotations.*;
-import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
 @Mapper
 public interface EmpMapper {// 同时处理emp表和expr表
     // XML映射实现SQL语句
-    int queryEmpCount(SearchInfo searchInfo);
+    int queryEmpCount(EmpSearchInfo empSearchInfo);
 
-    List<Emp> queryEmpList(SearchInfo searchInfo);
+    List<Emp> queryEmpList(EmpSearchInfo empSearchInfo);
 
     void addExpr(List<Expr> exprList);
 

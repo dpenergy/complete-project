@@ -1,12 +1,13 @@
 package com.wudd.server;
 
 import com.wudd.pojo.Emp;
+import com.wudd.pojo.EmpSearchInfo;
 import com.wudd.pojo.Result;
-import com.wudd.pojo.SearchInfo;
+
 import java.util.List;
 
 public interface EmpServer {
-    Result queryEmpList(SearchInfo searchInfo);
+    Result queryEmpList(EmpSearchInfo empSearchInfo);
 
     Result addEmp(Emp emp);
 

@@ -30,9 +30,6 @@ const exit = () => {
         ElMessage.success('已退出登录')
         // console.log('(((())))')
     })
-    .catch(() => {
-        ElMessage.info('用户取消操作')
-    })
 }
 
 

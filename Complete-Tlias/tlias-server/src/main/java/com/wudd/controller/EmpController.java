@@ -2,7 +2,7 @@ package com.wudd.controller;
 
 import com.wudd.pojo.Emp;
 import com.wudd.pojo.Result;
-import com.wudd.pojo.SearchInfo;
+import com.wudd.pojo.EmpSearchInfo;
 import com.wudd.server.EmpServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,10 @@ public class EmpController {
     private EmpServer empServer;
 
     @GetMapping
-    public Result queryEmpList(SearchInfo searchInfo){ // 前端是简单参数，可以之间使用对象接受
+    public Result queryEmpList(EmpSearchInfo empSearchInfo){ // 前端是简单参数，可以之间使用对象接受
         // name,gender,job,begin,end
         log.info("查询员工列表请求");
-        return empServer.queryEmpList(searchInfo);
+        return empServer.queryEmpList(empSearchInfo);
     }
 
     @PostMapping

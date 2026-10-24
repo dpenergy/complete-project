@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wudd.mapper.StudentMapper">
+
+    <!-- 具体的查询语句 -->
+    <!-- where标签会自动移除条件 前面 多余的and/or，注意只能自动移除前面的 -->
+    <!-- SQL语句的where条件里不认识别名 -->
+    <select id="queryStudentList" resultType="com.wudd.pojo.Student">
+        select s.*,c.name clazz_name from student s left join clazz c on s.clazz_id = c.id
+        <where>
+            <if test="name != null">s.name like concat('%',#{name},'%') </if>
+            <if test="clazzName != null">and c.name like concat('%',#{clazzName},'%') </if>
+            <if test="gender != null">and gender = #{gender} </if>
+            <if test="age != null">and age = #{age}</if>
+            <if test="status != null">and s.status = #{status}</if>
+            <if test="begin != null">and entry_date between #{begin} and #{end}</if>
+        </where>
+        limit #{startIndex},#{pageSize}
+    </select>
+
+    <select id="queryTotal" resultType="int">
+        select count(*) clazz_name from student s left join clazz c on s.clazz_id = c.id
+        <where>
+            <if test="name != null">s.name like concat('%',#{name},'%') </if>
+            <if test="clazzName != null">and c.name like concat('%',#{clazzName},'%') </if>
+            <if test="gender != null">and gender = #{gender} </if>
+            <if test="age != null">and age = #{age}</if>
+            <if test="status != null">and s.status = #{status}</if>
+            <if test="begin != null">and entry_date between #{begin} and #{end}</if>
+        </where>
+    </select>
+
+    <!-- 保持代码一致性和健壮性我们就全部都判断 -->
+    <insert id="addStudent">
+        insert into student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="gender != null">gender,</if>
+            <if test="age != null">age,</if>
+            <if test="clazzId != null">clazz_id,</if>
+            <if test="phone != null">phone,</if>
+            <if test="homePhone != null">home_phone</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="age != null">#{age},</if>
+            <if test="clazzId != null">#{clazzId},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="homePhone != null">#{homePhone}</if>
+        </trim>
+    </insert>
+
+    <!-- set标签可以自动去掉set 末尾部分 多余的逗号 -->
+    <update id="updateStudent">
+        update student
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="performance != null">performance = #{performance},</if>
+            <if test="clazzId != null">clazz_id = #{clazzId},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="homePhone != null">home_phone = #{homePhone}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- server层已经确保ids是有内容的 -->
+    <delete id="batchDeleteStudent">
+        delete from student
+        <where>
+            <foreach collection="ids" item="id" separator="or">
+                id = #{id}
+            </foreach>
+        </where>
+    </delete>
+
+</mapper>

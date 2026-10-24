@@ -6,16 +6,19 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Clazz {
-    private int id;
+    private Integer id;
     private String name;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate createDate;
-    private int headerId;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
+    private Integer headerId;
     private String headerName;
-    private int status;
+    private Integer status;
 }

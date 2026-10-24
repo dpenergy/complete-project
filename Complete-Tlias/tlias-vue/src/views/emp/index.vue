@@ -216,7 +216,7 @@ const deleteEmp = async (id, name) => {
 }
 
 const selectedRows = ref([]) // 存放勾选行的数组
-const handleSelectionChange = (rows) => { // 复选框勾选状态变化时触发，selection为当前所有勾选的行
+const handleSelectionChange = (rows) => { // 复选框勾选状态变化时触发，传递数组过来，元素是当前行对应的对象，selection为当前所有勾选的行
     selectedRows.value = rows
 }
 
@@ -328,14 +328,16 @@ const showMsg = (res) => {
 </script>
 
 <template>
-    {{ pageSize }}
-    {{ currentPage }}
+    <!-- {{ searchInfo }} -->
+    <!-- {{ pageSize }} -->
+    <!-- {{ currentPage }} -->
     <!-- {{ total }} -->
     <!-- {{ emp }} -->
     <!-- {{ exprs }} -->
     <!-- {{ empList }} -->
     <!-- {{ deptList }} -->
     <!-- {{ jobList }} -->
+
     <!-- 标题 -->
     <div class="head">
         <h1>员工管理</h1>

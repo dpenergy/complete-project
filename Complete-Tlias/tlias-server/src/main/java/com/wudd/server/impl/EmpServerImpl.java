@@ -17,16 +17,16 @@ public class EmpServerImpl implements EmpServer {
     private EmpMapper empMapper;
 
     @Override
-    public Result queryEmpList(SearchInfo searchInfo) {
-        int total = empMapper.queryEmpCount(searchInfo);
+    public Result queryEmpList(EmpSearchInfo empSearchInfo) {
+        int total = empMapper.queryEmpCount(empSearchInfo);
         if(total == 0) return Result.error("没有查询到相关数据");
 
         // limit部分不接收算术式,同时如果传递两个参数给mapper接口在用xml映射就得自己配置参数映射，所以自己封装到searchInfo里面
-        searchInfo.setStartIndex((searchInfo.getCurrentPage() - 1) *  searchInfo.getPageSize());
-        System.out.println(searchInfo.getStartIndex());
-        List<Emp> rows = empMapper.queryEmpList(searchInfo);
+        empSearchInfo.setStartIndex((empSearchInfo.getCurrentPage() - 1) *  empSearchInfo.getPageSize());
+        System.out.println(empSearchInfo.getStartIndex());
+        List<Emp> rows = empMapper.queryEmpList(empSearchInfo);
 
-        return Result.success(new SearchResult(total, rows));
+        return Result.success(new EmpSearchResult(total, rows));
     }
 
     @Transactional // 同时修改：emp,exprList两张表
