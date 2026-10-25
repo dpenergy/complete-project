@@ -1,10 +1,7 @@
 package com.wudd.server.impl;
 
 import com.wudd.mapper.StudentMapper;
-import com.wudd.pojo.Result;
-import com.wudd.pojo.Student;
-import com.wudd.pojo.StudentSearchInfo;
-import com.wudd.pojo.StudentSearchResult;
+import com.wudd.pojo.*;
 import com.wudd.server.StudentServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,5 +66,23 @@ public class StudentServerImpl implements StudentServer {
 
         studentMapper.batchDeleteStudent(ids);
         return Result.successWithMsg("删除成功！");
+    }
+
+    @Override
+    public Result genderCount() {
+        OptionResult optionResult = studentMapper.genderCount();
+        return Result.success(optionResult);
+    }
+
+    @Override
+    public Result graduateCount() {
+        OptionResult optionResult = studentMapper.graduateCount();
+        return Result.success(optionResult);
+    }
+
+    @Override
+    public Result performanceCount() {
+        OptionResult optionResult = studentMapper.performanceCount();
+        return Result.success(optionResult);
     }
 }

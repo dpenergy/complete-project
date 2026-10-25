@@ -104,8 +104,8 @@ public class EmpServerImpl implements EmpServer {
 
     @Override
     public Result genderCount() {
-        GenderResult genderResult = empMapper.genderCount();
-        return Result.success(genderResult);
+        OptionResult optionResult = empMapper.genderCount();
+        return Result.success(optionResult);
     }
 
     @Override

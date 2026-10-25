@@ -53,4 +53,22 @@ public class StudentController {
         log.info("修改学员信息");
         return studentServer.updateStudent(student);
     }
+
+    @GetMapping("/gender")
+    public Result genderCount() {
+        log.info("学生性别统计请求");
+        return studentServer.genderCount();
+    }
+
+    @GetMapping("/graduate")
+    public Result graduateCount() {
+        log.info("学员毕业状况统计请求");
+        return studentServer.graduateCount();
+    }
+
+    @GetMapping("/performance")
+    public Result performanceCount() {
+        log.info("学生表现统计请求");
+        return studentServer.performanceCount();
+    }
 }

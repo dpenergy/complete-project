@@ -18,3 +18,9 @@ export const batchDeleteStudentApi = (ids) => {
 }
 
 export const editStudentApi = (studentInfo) => request.put('/students',studentInfo)
+
+export const stuGenderCountApi = () => request.get('/students/gender')
+
+export const stuGraduateCountApi = () => request.get('/students/graduate')
+
+export const stuPerformanceCountApi = () => request.get('/students/performance')

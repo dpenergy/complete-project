@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GenderResult {
-    private Integer boyCounts;
-    private Integer girlCounts;
+public class OptionResult {
+    private Integer oneCounts;
+    private Integer twoCounts;
+    private Integer threeCounts;
+    private Integer fourCounts;
 }

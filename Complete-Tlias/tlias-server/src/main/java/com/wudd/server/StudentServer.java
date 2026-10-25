@@ -18,4 +18,10 @@ public interface StudentServer {
     Result updateStudent(Student student);
 
     Result batchDeleteStudent(List<Integer> ids);
+
+    Result genderCount();
+
+    Result graduateCount();
+
+    Result performanceCount();
 }

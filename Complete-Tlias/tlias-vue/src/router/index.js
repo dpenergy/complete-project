@@ -9,8 +9,8 @@ import EmpView from '@/views/emp/index.vue'
 import HomeView from '@/views/index/index.vue'
 import LoginView from '@/views/login/index.vue'
 import StuView from '@/views/stu/index.vue'
-import StuReportView from '@/views/report/stu-report.vue'
-import EmpReportView from '@/views/report/emp-report.vue'
+import EmpJobView from '@/views/report/emp-job.vue'
+import StuInfoView from '@/views/report/stu-info.vue'
 import LayoutView from '@/views/layout/index.vue'
 
 // ----------- 定义路由规则 ----------- 
@@ -55,15 +55,20 @@ const routes = [
         name: 'stu',
         component: StuView
       },
+      // {
+      //   path: 'stu-report',
+      //   name: 'stu-report',
+      //   component: StuReportView // 这个组件已经被我们删除了，所以在这里模块加载的时候就会抛出异常
+      // },
       {
-        path: 'stu-report',
-        name: 'stu-report',
-        component: StuReportView
+        path: 'emp-job',
+        name: 'emp-job',
+        component: EmpJobView
       },
       {
-        path: 'emp-report',
-        name: 'emp-report',
-        component: EmpReportView
+        path: 'stu-info',
+        name: 'stu-info',
+        component: StuInfoView
       }
     ]
   }

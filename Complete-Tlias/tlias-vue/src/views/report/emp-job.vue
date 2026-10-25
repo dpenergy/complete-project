@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { echarts } from '@/utils/echarts'
-import { genderCountApi,queryJobDataApi } from '@/api/emp'
+import { empGenderCountApi,queryJobDataApi } from '@/api/emp'
 import { ElMessage } from 'element-plus'
 
 // 用模板 ref 代替 document.getElementById
@@ -15,7 +15,7 @@ let myChart
 // 单独获取性别统计{girlCounts,boyCounts}
 const genderData = ref(null)
 const genderCount = async () => {
-    const res =await genderCountApi()
+    const res =await empGenderCountApi()
     if(res.code) {
         genderData.value = res.data
     } else {
@@ -32,8 +32,8 @@ const girlCounts = ref([])
 const addGenderData = () => {
     if (!genderData.value) return // 性别统计接口失败时跳过，避免读取 null 的属性报错
     jobList.value.push('性别统计')
-    boyCounts.value.push(genderData.value.boyCounts)
-    girlCounts.value.push(genderData.value.girlCounts)
+    boyCounts.value.push(genderData.value.oneCounts)
+    girlCounts.value.push(genderData.value.twoCounts)
 }
 
 const handleJobData = (jobData) => {
@@ -98,7 +98,9 @@ onMounted(async () => {
     myChart = echarts.init(mainRef.value, 'dark')
 
     // 先把数据拿到，再渲染：await 等两个请求都返回、数组填好之后，才执行 setOption
-    await Promise.all([genderCount(), queryJobData()])
+    // async方法会自动返回一个Promise对象
+    // 传递给Promise.all或者Promise.allSettled方法的参数是一个Promise数组
+    await Promise.allSettled([genderCount(), queryJobData()])
 
     setChartOption()
 })
@@ -117,6 +119,5 @@ onMounted(async () => {
 .main {
     width: 100%;
     height: 100%;
-    background-color: #040810;
 }
 </style>

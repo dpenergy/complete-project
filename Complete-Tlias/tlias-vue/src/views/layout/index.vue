@@ -1,11 +1,12 @@
 <script setup>
 import avatarUrl from '@/assets/img/avatar.jpg'
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 const username = ref('wudd');
-const route = useRouter();// 获取当前路由信息（不要写错了小心一点）
+// const route = useRouter();// 获取当前路由信息（不要写错了小心一点）
+const route = useRoute(); // useRoute()是用来读取当前的路由的，useRouter获取的实例是用来实现跳转的
 
 const exit = () => {
     ElMessageBox.confirm(
@@ -17,19 +18,19 @@ const exit = () => {
             type: 'warning',
         }
     )
-    .then(() => {
-        // console.log('???????')
-        
-        localStorage.removeItem('admi')
-        // console.log('!!!!!!!!')
-        
-        username.value = ''
-        // console.log('+++++++++')
-        route.push('/login')
-        // console.log(')))))))))')
-        ElMessage.success('已退出登录')
-        // console.log('(((())))')
-    })
+        .then(() => {
+            // console.log('???????')
+
+            localStorage.removeItem('admi')
+            // console.log('!!!!!!!!')
+
+            username.value = ''
+            // console.log('+++++++++')
+            route.push('/login')
+            // console.log(')))))))))')
+            ElMessage.success('已退出登录')
+            // console.log('(((())))')
+        })
 }
 
 
@@ -121,12 +122,25 @@ const setUsername = () => {
                                 </el-icon>
                                 <span>Data</span>
                             </template>
-                            <el-menu-item index="emp-report"><el-icon>
+                            <el-menu-item index="emp-job"><el-icon>
                                     <UserFilled />
-                                </el-icon>Emp Info</el-menu-item>
-                            <el-menu-item index="stu-report"><el-icon>
+                                </el-icon>Job Data</el-menu-item>
+                            <!-- 删除东西一定要删除干净，使用文本查早ctrl+f来全部删除，不然漏掉了就会导致异常 -->
+                            <!-- <el-menu-item index="stu-report"><el-icon>
                                     <UserFilled />
-                                </el-icon>Student Info</el-menu-item>
+                                </el-icon>Student Info</el-menu-item> -->
+                            <!-- <el-sub-menu index="part-five">
+                                <template #title>
+                                    <el-icon><UserFilled /></el-icon>
+                                    <span>Student info</span>
+                                </template>
+                                <el-menu-item index="stu-gender"><el-icon><Male /></el-icon>Gender</el-menu-item>
+                                <el-menu-item index="stu-performance"><el-icon><StarFilled /></el-icon>Performance</el-menu-item>
+                                <el-menu-item index="stu-info"><el-icon><Compass /></el-icon>Info</el-menu-item>
+                            </el-sub-menu> -->
+                            <el-menu-item index="stu-info"><el-icon>
+                                    <UserFilled />
+                                </el-icon>Stu Info</el-menu-item>
                         </el-sub-menu>
                     </el-menu>
                 </el-aside>

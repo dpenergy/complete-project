@@ -59,7 +59,7 @@ public class EmpController {
 
     @GetMapping("/gender")
     public Result genderCount() {
-        log.info("性别统计请求");
+        log.info("员工性别统计请求");
         return empServer.genderCount();
     }
 

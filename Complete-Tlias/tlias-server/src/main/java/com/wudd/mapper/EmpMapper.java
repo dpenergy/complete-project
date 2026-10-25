@@ -39,10 +39,10 @@ public interface EmpMapper {// 同时处理emp表和expr表
     List<Emp> queryHeaderList();
 
     @Select("select\n" +
-            "    sum(case when gender = 1 then 1 else 0 end) as boy_counts,\n" +
-            "    sum(case when gender = 2 then 1 else 0 end) as girl_counts\n" +
+            "    sum(case when gender = 1 then 1 else 0 end) as one_counts,\n" +
+            "    sum(case when gender = 2 then 1 else 0 end) as two_counts\n" +
             "from emp")
-    GenderResult genderCount();
+    OptionResult genderCount();
 
 
     @Select("select j.name,\n" +
