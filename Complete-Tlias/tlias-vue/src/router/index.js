@@ -7,7 +7,6 @@ import ClazzView from '@/views/clazz/index.vue'
 import DeptView from '@/views/dept/index.vue'
 import EmpView from '@/views/emp/index.vue'
 import HomeView from '@/views/index/index.vue'
-import LogView from '@/views/log/index.vue'
 import LoginView from '@/views/login/index.vue'
 import StuView from '@/views/stu/index.vue'
 import StuReportView from '@/views/report/stu-report.vue'
@@ -50,11 +49,6 @@ const routes = [
         path: 'emp',
         name: 'emp',
         component: EmpView
-      },
-      {
-        path: 'log',
-        name: 'log',
-        component: LogView
       },
       {
         path: 'stu',

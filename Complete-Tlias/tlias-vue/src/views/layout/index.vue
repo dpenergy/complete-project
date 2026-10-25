@@ -127,9 +127,6 @@ const setUsername = () => {
                             <el-menu-item index="stu-report"><el-icon>
                                     <UserFilled />
                                 </el-icon>Student Info</el-menu-item>
-                            <el-menu-item index="log"><el-icon>
-                                    <Clock />
-                                </el-icon>Log</el-menu-item>
                         </el-sub-menu>
                     </el-menu>
                 </el-aside>
@@ -249,6 +246,7 @@ const setUsername = () => {
 .main {
     /* background-color: #363637; */
     background-color: #373b3e;
+    /* background-color: #040810; */
     height: 100%;
 }
 

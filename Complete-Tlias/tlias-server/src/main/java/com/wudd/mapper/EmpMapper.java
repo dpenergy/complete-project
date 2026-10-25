@@ -1,8 +1,6 @@
 package com.wudd.mapper;
 
-import com.wudd.pojo.Emp;
-import com.wudd.pojo.EmpSearchInfo;
-import com.wudd.pojo.Expr;
+import com.wudd.pojo.*;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -40,11 +38,18 @@ public interface EmpMapper {// 同时处理emp表和expr表
     @Select("select * from emp where emp.job_id = 2 or emp.job_id = 9")
     List<Emp> queryHeaderList();
 
-    //@Delete("delete from expr where emp_id = #{id}")
-    //void deleteExpr(Integer id);
+    @Select("select\n" +
+            "    sum(case when gender = 1 then 1 else 0 end) as boy_counts,\n" +
+            "    sum(case when gender = 2 then 1 else 0 end) as girl_counts\n" +
+            "from emp")
+    GenderResult genderCount();
 
-    //@Delete("delete from emp where id = #{id}")
-    //void deleteEmp(Integer id);
 
-
+    @Select("select j.name,\n" +
+            "       sum(case when gender = 1 then 1 else 0 end) as boy_counts,\n" +
+            "       sum(case when gender = 2 then 1 else 0 end) as girl_counts\n" +
+            "from job j\n" +
+            "    left join emp e on j.id=e.job_id\n" +
+            "group by j.name;")
+    List<JobData> queryJobData();
 }

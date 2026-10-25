@@ -49,7 +49,6 @@ const cancel = () => {admi.value = { username: '', password: '' }}
             <el-button @click="cancel">取消</el-button>
         </div>
     </div>
-
 </template>
 
 <style scoped>

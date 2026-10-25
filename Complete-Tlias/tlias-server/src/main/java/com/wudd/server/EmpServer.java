@@ -18,4 +18,8 @@ public interface EmpServer {
     Result updateEmp(Emp emp);
 
     Result queryHeaderList();
+
+    Result genderCount();
+
+    Result queryJobData();
 }

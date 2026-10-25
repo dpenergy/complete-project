@@ -101,4 +101,18 @@ public class EmpServerImpl implements EmpServer {
 
         return Result.success(headerList);
     }
+
+    @Override
+    public Result genderCount() {
+        GenderResult genderResult = empMapper.genderCount();
+        return Result.success(genderResult);
+    }
+
+    @Override
+    public Result queryJobData() {
+        List<JobData> jobDataList = empMapper.queryJobData();
+        return Result.success(jobDataList);
+    }
+
+
 }

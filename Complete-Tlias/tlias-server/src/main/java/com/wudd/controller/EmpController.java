@@ -1,5 +1,6 @@
 package com.wudd.controller;
 
+import com.wudd.mapper.EmpMapper;
 import com.wudd.pojo.Emp;
 import com.wudd.pojo.Result;
 import com.wudd.pojo.EmpSearchInfo;
@@ -54,5 +55,17 @@ public class EmpController {
     public Result queryHeaderList() {
         log.info("可选班主任信息查询");
         return empServer.queryHeaderList();
+    }
+
+    @GetMapping("/gender")
+    public Result genderCount() {
+        log.info("性别统计请求");
+        return empServer.genderCount();
+    }
+
+    @GetMapping("/jobs")
+    public Result queryJobData() {
+        log.info("查询职位信息请求");
+        return empServer.queryJobData();
     }
 }
